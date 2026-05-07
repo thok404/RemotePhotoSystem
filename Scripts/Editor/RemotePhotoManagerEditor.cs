@@ -342,7 +342,7 @@ namespace RemotePhotoSystem.Editor
 
             RemotePhotoGroup group = Undo.AddComponent<RemotePhotoGroup>(groupObject);
             Undo.RecordObject(group, "Assign Remote Photo Manager");
-            group.galleryService = service;
+            group.manager = service;
             EditorUtility.SetDirty(group);
 
             AppendManagedGroup(service, group);
@@ -418,10 +418,10 @@ namespace RemotePhotoSystem.Editor
             while (groups != null && index < groups.Length)
             {
                 RemotePhotoGroup group = groups[index];
-                if (group != null && group.galleryService != service)
+                if (group != null && group.manager != service)
                 {
                     Undo.RecordObject(group, "Assign Remote Photo Manager");
-                    group.galleryService = service;
+                    group.manager = service;
                     EditorUtility.SetDirty(group);
                     changedBackrefs++;
                 }
@@ -474,7 +474,7 @@ namespace RemotePhotoSystem.Editor
             while (service.managedGroups != null && index < service.managedGroups.Length)
             {
                 RemotePhotoGroup group = service.managedGroups[index];
-                if (group != null && group.galleryService != service)
+                if (group != null && group.manager != service)
                 {
                     count++;
                 }
@@ -646,7 +646,7 @@ namespace RemotePhotoSystem.Editor
                 return;
             }
 
-            if (!RemotePhotoManifestJsonUtility.TryFromJson(service.galleryConfigFile.text, out RemotePhotoManifestDocument document))
+            if (!RemotePhotoGalleryConfigJsonUtility.TryFromJson(service.galleryConfigFile.text, out RemotePhotoGalleryConfigDocument document))
             {
                 Debug.LogError("[RemotePhotoSystem] Failed to parse gallery config JSON.", service);
                 return;
@@ -658,7 +658,7 @@ namespace RemotePhotoSystem.Editor
             int invalidCount = 0;
             int duplicateCount = 0;
 
-            foreach (RemotePhotoManifestEntry entry in document.entries)
+            foreach (RemotePhotoGalleryConfigEntry entry in document.entries)
             {
                 if (entry == null || !RemotePhotoUrlUtility.IsValidUrlString(entry.url))
                 {

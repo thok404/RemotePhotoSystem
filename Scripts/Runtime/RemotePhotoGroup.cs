@@ -11,7 +11,7 @@ namespace RemotePhotoSystem
         private const int TriggerActionPrevious = 1;
         private const int TriggerActionNext = 2;
 
-        [HideInInspector] public RemotePhotoManager galleryService;
+        [HideInInspector] public RemotePhotoManager manager;
         public RemotePhotoPermissionMode permissionMode = RemotePhotoPermissionMode.Everyone;
         public float triggerCooldownSeconds = 2f;
         public RemotePhotoFrame[] targets = new RemotePhotoFrame[0];
@@ -68,59 +68,59 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            if (galleryService == null)
+            if (manager == null)
             {
-                lastTriggerError = "Gallery service is missing.";
+                lastTriggerError = "Remote Photo Manager is missing.";
                 return;
             }
 
-            if (!galleryService.ContainsManagedGroup(this))
+            if (!manager.ContainsManagedGroup(this))
             {
-                lastTriggerError = "This group is not managed by its gallery service.";
+                lastTriggerError = "This group is not managed by its Remote Photo Manager.";
                 return;
             }
 
-            galleryService.ApplyBakedLocalManifest();
-            if (!galleryService.HasManifestData())
+            manager.ApplyBakedGallery();
+            if (!manager.HasGalleryData())
             {
-                lastTriggerError = galleryService.lastManifestError;
+                lastTriggerError = manager.lastGalleryError;
                 return;
             }
 
             if (!EnsureGalleryOwnership())
             {
-                lastTriggerError = "Could not take ownership of the gallery service.";
+                lastTriggerError = "Could not take ownership of the Remote Photo Manager.";
                 return;
             }
 
-            if (triggerAction == TriggerActionRandom && galleryService.configuredPlayMode != RemotePhotoPlayMode.Random)
+            if (triggerAction == TriggerActionRandom && manager.configuredPlayMode != RemotePhotoPlayMode.Random)
             {
                 lastTriggerError = "Random button can only be used when the manager Play Mode is Random.";
-                galleryService.LogDebug("Group random trigger ignored because manager is in sequence mode: " + gameObject.name);
+                manager.LogDebug("Group random trigger ignored because manager is in sequence mode: " + gameObject.name);
                 return;
             }
 
-            if (triggerAction != TriggerActionRandom && galleryService.configuredPlayMode == RemotePhotoPlayMode.Random)
+            if (triggerAction != TriggerActionRandom && manager.configuredPlayMode == RemotePhotoPlayMode.Random)
             {
                 lastTriggerError = "Previous/Next buttons can only be used when the manager Play Mode is SequenceForward or SequenceReverse.";
-                galleryService.LogDebug("Group page trigger ignored because manager is in random mode: " + gameObject.name);
+                manager.LogDebug("Group page trigger ignored because manager is in random mode: " + gameObject.name);
                 return;
             }
 
             int landscapeCount = CountTargetSlots(RemotePhotoOrientation.Landscape);
             int portraitCount = CountTargetSlots(RemotePhotoOrientation.Portrait);
             RegisterPreloadDownloadMaterial();
-            galleryService.LogDebug("Group trigger requested: " + gameObject.name + " Action=" + GetTriggerActionName(triggerAction) + " L=" + landscapeCount + ", P=" + portraitCount);
+            manager.LogDebug("Group trigger requested: " + gameObject.name + " Action=" + GetTriggerActionName(triggerAction) + " L=" + landscapeCount + ", P=" + portraitCount);
             if (!GenerateSelectionFromGallery(landscapeCount, portraitCount, triggerAction))
             {
-                galleryService.LogDebug("Group trigger blocked because the gallery does not have enough URLs for this group: " + gameObject.name);
+                manager.LogDebug("Group trigger blocked because the gallery does not have enough URLs for this group: " + gameObject.name);
                 return;
             }
 
             MarkTriggerCooldown();
-            galleryService.NotifySelectionStateChanged();
+            manager.NotifySelectionStateChanged();
             RequestSerialization();
-            galleryService.LogDebug("Group trigger applied: " + gameObject.name);
+            manager.LogDebug("Group trigger applied: " + gameObject.name);
         }
 
         public override void OnDeserialization()
@@ -162,17 +162,17 @@ namespace RemotePhotoSystem
 
         private bool EnsureGalleryOwnership()
         {
-            if (galleryService == null)
+            if (manager == null)
             {
                 return false;
             }
 
-            if (!Networking.IsOwner(galleryService.gameObject))
+            if (!Networking.IsOwner(manager.gameObject))
             {
-                Networking.SetOwner(Networking.LocalPlayer, galleryService.gameObject);
+                Networking.SetOwner(Networking.LocalPlayer, manager.gameObject);
             }
 
-            return Networking.IsOwner(galleryService.gameObject);
+            return Networking.IsOwner(manager.gameObject);
         }
 
         private bool CanPassTriggerCooldown()
@@ -216,7 +216,7 @@ namespace RemotePhotoSystem
 
         private void RegisterPreloadDownloadMaterial()
         {
-            if (galleryService == null || targets == null)
+            if (manager == null || targets == null)
             {
                 return;
             }
@@ -230,7 +230,7 @@ namespace RemotePhotoSystem
                     Material material = target.GetRuntimeMaterial();
                     if (material != null)
                     {
-                        galleryService.RegisterPreloadDownloadMaterial(material);
+                        manager.RegisterPreloadDownloadMaterial(material);
                     }
                 }
 
@@ -242,13 +242,13 @@ namespace RemotePhotoSystem
         {
             EnsureSyncedArrays();
 
-            if (landscapeCount > 0 && galleryService.GetLandscapeCount() <= 0)
+            if (landscapeCount > 0 && manager.GetLandscapeCount() <= 0)
             {
                 lastTriggerError = "Landscape gallery is empty.";
                 return false;
             }
 
-            if (portraitCount > 0 && galleryService.GetPortraitCount() <= 0)
+            if (portraitCount > 0 && manager.GetPortraitCount() <= 0)
             {
                 lastTriggerError = "Portrait gallery is empty.";
                 return false;
@@ -264,13 +264,13 @@ namespace RemotePhotoSystem
             else
             {
                 bool nextPage = triggerAction == TriggerActionNext;
-                galleryService.BeginSequencePageSelection(nextPage, landscapeCount, portraitCount);
+                manager.BeginSequencePageSelection(nextPage, landscapeCount, portraitCount);
                 if (!FillSequencePageSelectionInTargetOrder())
                 {
                     return false;
                 }
 
-                galleryService.CommitSequencePageSelection(landscapeCount, portraitCount);
+                manager.CommitSequencePageSelection(landscapeCount, portraitCount);
             }
 
             selectionRevision++;
@@ -339,7 +339,7 @@ namespace RemotePhotoSystem
 
                 if (target.orientation == RemotePhotoOrientation.Landscape)
                 {
-                    VRCUrl selectedUrl = galleryService.SelectLandscapeUrl(selectedLandscapeUrls, selectedLandscapeCount);
+                    VRCUrl selectedUrl = manager.SelectLandscapeUrl(selectedLandscapeUrls, selectedLandscapeCount);
                     if (!RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
                     {
                         lastTriggerError = "Could not select a landscape photo.";
@@ -352,7 +352,7 @@ namespace RemotePhotoSystem
                 }
                 else
                 {
-                    VRCUrl selectedUrl = galleryService.SelectPortraitUrl(selectedPortraitUrls, selectedPortraitCount);
+                    VRCUrl selectedUrl = manager.SelectPortraitUrl(selectedPortraitUrls, selectedPortraitCount);
                     if (!RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
                     {
                         lastTriggerError = "Could not select a portrait photo.";
@@ -384,7 +384,7 @@ namespace RemotePhotoSystem
 
                 if (target.orientation == RemotePhotoOrientation.Landscape)
                 {
-                    VRCUrl selectedUrl = galleryService.SelectLandscapeSequencePageUrl();
+                    VRCUrl selectedUrl = manager.SelectLandscapeSequencePageUrl();
                     if (!RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
                     {
                         lastTriggerError = "Could not select a landscape sequence page photo.";
@@ -395,7 +395,7 @@ namespace RemotePhotoSystem
                 }
                 else
                 {
-                    VRCUrl selectedUrl = galleryService.SelectPortraitSequencePageUrl();
+                    VRCUrl selectedUrl = manager.SelectPortraitSequencePageUrl();
                     if (!RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
                     {
                         lastTriggerError = "Could not select a portrait sequence page photo.";
@@ -441,7 +441,7 @@ namespace RemotePhotoSystem
                 }
                 else
                 {
-                    target.LoadPhotoFromGallery(syncedUrls[index], galleryService);
+                    target.LoadPhotoFromManager(syncedUrls[index], manager);
                 }
 
                 index++;

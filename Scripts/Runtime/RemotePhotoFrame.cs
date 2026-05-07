@@ -40,7 +40,7 @@ namespace RemotePhotoSystem
         private string _pendingGalleryCacheUrl = string.Empty;
         private int _activeFitMode;
         private int _activeRetryCount;
-        private RemotePhotoManager _activeGalleryService;
+        private RemotePhotoManager _activeManager;
         private float _resolvedFrameAspectRatio = 1.7777778f;
         private const int DefaultDownloadRetryAttempts = 3;
         private const float DefaultDownloadRetryDelaySeconds = 2f;
@@ -82,7 +82,7 @@ namespace RemotePhotoSystem
 
         public void LoadPhoto(VRCUrl url)
         {
-            _activeGalleryService = null;
+            _activeManager = null;
 
             if (_runtimeMaterial == null)
             {
@@ -114,9 +114,9 @@ namespace RemotePhotoSystem
             StartActiveDownload();
         }
 
-        public void LoadPhotoFromGallery(VRCUrl url, RemotePhotoManager galleryService)
+        public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager)
         {
-            _activeGalleryService = galleryService;
+            _activeManager = manager;
 
             if (_runtimeMaterial == null)
             {
@@ -135,9 +135,9 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            if (galleryService != null && galleryService.IsPreloadEnabled())
+            if (manager != null && manager.IsPreloadEnabled())
             {
-                Texture2D cachedTexture = galleryService.GetCachedTexture(url);
+                Texture2D cachedTexture = manager.GetCachedTexture(url);
                 if (cachedTexture != null)
                 {
                     _activeVrcUrl = url;
@@ -148,7 +148,7 @@ namespace RemotePhotoSystem
                     CancelCurrentDownload();
                     LogDownload("Cache hit: " + gameObject.name + " -> " + _activeUrl);
                     ApplyTexture(cachedTexture, _activeFitMode);
-                    galleryService.ConsumeCachedTexture(url);
+                    manager.ConsumeCachedTexture(url);
                     return;
                 }
 
@@ -159,15 +159,15 @@ namespace RemotePhotoSystem
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
                 CancelCurrentDownload();
-                galleryService.LogDebug("Cache not ready, frame waits for preload queue: " + gameObject.name + " -> " + _activeUrl);
-                galleryService.RequestPreloadPriority(url);
-                galleryService.WakePreloadQueue();
+                manager.LogDebug("Cache not ready, frame waits for preload queue: " + gameObject.name + " -> " + _activeUrl);
+                manager.RequestPreloadPriority(url);
+                manager.WakePreloadQueue();
                 SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
                 return;
             }
 
             LoadPhoto(url);
-            _activeGalleryService = galleryService;
+            _activeManager = manager;
         }
 
         public void ClearPhoto()
@@ -176,7 +176,7 @@ namespace RemotePhotoSystem
             _activeUrl = string.Empty;
             _pendingRetryUrl = string.Empty;
             _pendingGalleryCacheUrl = string.Empty;
-            _activeGalleryService = null;
+            _activeManager = null;
             _activeRetryCount = 0;
             CancelCurrentDownload();
             ApplyFallback();
@@ -184,25 +184,25 @@ namespace RemotePhotoSystem
 
         public void _ApplyGalleryCacheWhenReady()
         {
-            if (_activeGalleryService == null ||
+            if (_activeManager == null ||
                 _pendingGalleryCacheUrl != _activeUrl ||
                 !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
             {
                 return;
             }
 
-            Texture2D cachedTexture = _activeGalleryService.GetCachedTextureQuiet(_activeVrcUrl);
+            Texture2D cachedTexture = _activeManager.GetCachedTextureQuiet(_activeVrcUrl);
             if (cachedTexture != null)
             {
-                LogDownload("Service queue image ready: " + gameObject.name + " -> " + _activeUrl);
+                LogDownload("Manager queue image ready: " + gameObject.name + " -> " + _activeUrl);
                 _pendingGalleryCacheUrl = string.Empty;
                 ApplyTexture(cachedTexture, _activeFitMode);
-                _activeGalleryService.ConsumeCachedTexture(_activeVrcUrl);
+                _activeManager.ConsumeCachedTexture(_activeVrcUrl);
                 return;
             }
 
-            _activeGalleryService.WakePreloadQueue();
-            _activeGalleryService.RequestPreloadPriority(_activeVrcUrl);
+            _activeManager.WakePreloadQueue();
+            _activeManager.RequestPreloadPriority(_activeVrcUrl);
             SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
         }
 
@@ -216,9 +216,9 @@ namespace RemotePhotoSystem
             _currentDownload = result;
             _activeRetryCount = 0;
             LogDownload("Download success: " + gameObject.name + " -> " + _activeUrl);
-            if (_activeGalleryService != null)
+            if (_activeManager != null)
             {
-                _activeGalleryService.StoreCachedTexture(result.Url, result.Result);
+                _activeManager.StoreCachedTexture(result.Url, result.Result);
             }
 
             ApplyTexture(result.Result, _activeFitMode);
@@ -357,9 +357,9 @@ namespace RemotePhotoSystem
 
         private int GetImageRetryAttempts()
         {
-            if (_activeGalleryService != null)
+            if (_activeManager != null)
             {
-                return _activeGalleryService.GetImageRetryAttempts();
+                return _activeManager.GetImageRetryAttempts();
             }
 
             return DefaultDownloadRetryAttempts;
@@ -367,9 +367,9 @@ namespace RemotePhotoSystem
 
         private float GetImageRetryDelaySeconds()
         {
-            if (_activeGalleryService != null)
+            if (_activeManager != null)
             {
-                return _activeGalleryService.GetImageRetryDelaySeconds();
+                return _activeManager.GetImageRetryDelaySeconds();
             }
 
             return DefaultDownloadRetryDelaySeconds;
@@ -439,7 +439,7 @@ namespace RemotePhotoSystem
 
         private void LogDownload(string message)
         {
-            if (_activeGalleryService != null && _activeGalleryService.debugLogs)
+            if (_activeManager != null && _activeManager.debugLogs)
             {
                 Debug.Log("[RemotePhotoSystem] " + message);
             }

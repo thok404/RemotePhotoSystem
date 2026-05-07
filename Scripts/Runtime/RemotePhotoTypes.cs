@@ -89,7 +89,7 @@ namespace RemotePhotoSystem
     }
 
     [Serializable]
-    public class RemotePhotoManifestEntry
+    public class RemotePhotoGalleryConfigEntry
     {
         public string id = string.Empty;
         public string url = string.Empty;
@@ -100,9 +100,9 @@ namespace RemotePhotoSystem
     }
 
     [Serializable]
-    public class RemotePhotoManifestDocument
+    public class RemotePhotoGalleryConfigDocument
     {
-        public RemotePhotoManifestEntry[] entries = new RemotePhotoManifestEntry[0];
+        public RemotePhotoGalleryConfigEntry[] entries = new RemotePhotoGalleryConfigEntry[0];
     }
 
     public static class RemotePhotoFitModeUtility
@@ -123,7 +123,7 @@ namespace RemotePhotoSystem
         }
     }
 
-    public static class RemotePhotoManifestJsonUtility
+    public static class RemotePhotoGalleryConfigJsonUtility
     {
         [Serializable]
         private class JsonEntry
@@ -142,7 +142,7 @@ namespace RemotePhotoSystem
             public JsonEntry[] entries = new JsonEntry[0];
         }
 
-        public static bool TryFromJson(string json, out RemotePhotoManifestDocument document)
+        public static bool TryFromJson(string json, out RemotePhotoGalleryConfigDocument document)
         {
             document = null;
 
@@ -159,9 +159,9 @@ namespace RemotePhotoSystem
                     return false;
                 }
 
-                document = new RemotePhotoManifestDocument
+                document = new RemotePhotoGalleryConfigDocument
                 {
-                    entries = BuildManifestEntries(jsonDocument.entries)
+                    entries = BuildGalleryConfigEntries(jsonDocument.entries)
                 };
             }
             catch
@@ -177,14 +177,14 @@ namespace RemotePhotoSystem
 
             if (document.entries == null)
             {
-                document.entries = new RemotePhotoManifestEntry[0];
+                document.entries = new RemotePhotoGalleryConfigEntry[0];
             }
 
             for (int i = 0; i < document.entries.Length; i++)
             {
                 if (document.entries[i] == null)
                 {
-                    document.entries[i] = new RemotePhotoManifestEntry();
+                    document.entries[i] = new RemotePhotoGalleryConfigEntry();
                 }
 
                 if (document.entries[i].tags == null)
@@ -201,18 +201,18 @@ namespace RemotePhotoSystem
             return true;
         }
 
-        private static RemotePhotoManifestEntry[] BuildManifestEntries(JsonEntry[] entries)
+        private static RemotePhotoGalleryConfigEntry[] BuildGalleryConfigEntries(JsonEntry[] entries)
         {
             if (entries == null)
             {
-                return new RemotePhotoManifestEntry[0];
+                return new RemotePhotoGalleryConfigEntry[0];
             }
 
-            RemotePhotoManifestEntry[] manifestEntries = new RemotePhotoManifestEntry[entries.Length];
+            RemotePhotoGalleryConfigEntry[] configEntries = new RemotePhotoGalleryConfigEntry[entries.Length];
             for (int i = 0; i < entries.Length; i++)
             {
                 JsonEntry entry = entries[i] ?? new JsonEntry();
-                manifestEntries[i] = new RemotePhotoManifestEntry
+                configEntries[i] = new RemotePhotoGalleryConfigEntry
                 {
                     id = entry.id ?? string.Empty,
                     url = entry.url ?? string.Empty,
@@ -225,7 +225,7 @@ namespace RemotePhotoSystem
                 };
             }
 
-            return manifestEntries;
+            return configEntries;
         }
 
         private static bool IsCaseInsensitiveMatch(string value, string expected)

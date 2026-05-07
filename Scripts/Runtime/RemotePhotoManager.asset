@@ -1021,13 +1021,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedLandscapeUrls
+      Data: preloadLandscapeUrls
     - Name: $v
       Entry: 7
       Data: 56|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedLandscapeUrls
+      Data: preloadLandscapeUrls
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 44
@@ -1075,13 +1075,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedPortraitUrls
+      Data: preloadPortraitUrls
     - Name: $v
       Entry: 7
       Data: 59|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedPortraitUrls
+      Data: preloadPortraitUrls
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 44
@@ -1129,13 +1129,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedOrderedUrls
+      Data: preloadOrderedUrls
     - Name: $v
       Entry: 7
       Data: 62|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedOrderedUrls
+      Data: preloadOrderedUrls
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 44
@@ -1183,13 +1183,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedRevision
+      Data: preloadRevision
     - Name: $v
       Entry: 7
       Data: 65|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedRevision
+      Data: preloadRevision
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 4
@@ -1237,13 +1237,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedReady
+      Data: preloadReady
     - Name: $v
       Entry: 7
       Data: 68|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedReady
+      Data: preloadReady
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 25
@@ -1399,13 +1399,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedNextLandscapeIndex
+      Data: preloadNextLandscapeIndex
     - Name: $v
       Entry: 7
       Data: 77|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedNextLandscapeIndex
+      Data: preloadNextLandscapeIndex
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 4
@@ -1453,13 +1453,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: preparedNextPortraitIndex
+      Data: preloadNextPortraitIndex
     - Name: $v
       Entry: 7
       Data: 80|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: preparedNextPortraitIndex
+      Data: preloadNextPortraitIndex
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 4
@@ -1615,13 +1615,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: lastManifestError
+      Data: lastGalleryError
     - Name: $v
       Entry: 7
       Data: 89|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: lastManifestError
+      Data: lastGalleryError
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 90|System.RuntimeType, mscorlib
@@ -1675,13 +1675,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: hasManifestData
+      Data: hasGalleryData
     - Name: $v
       Entry: 7
       Data: 93|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: hasManifestData
+      Data: hasGalleryData
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 25

@@ -84,9 +84,9 @@ namespace RemotePhotoSystem.Editor
                 return true;
             }
 
-            if (group != null && group.galleryService != null)
+            if (group != null && group.manager != null)
             {
-                language = group.galleryService.inspectorLanguage;
+                language = group.manager.inspectorLanguage;
                 return true;
             }
 

@@ -35,7 +35,7 @@ namespace RemotePhotoSystem.Editor
                 EditorGUILayout.HelpBox(
                     L(language,
                         "This frame is not referenced by any managed group. Inspector language falls back to English until the link is restored.",
-                        "このフレームはどの管理グループからも参照されていません。リンクが復旧するまで Inspector の言語は英語にフォールバックします。",
+                        "このフレームはどの管理グループからも参照されていません。リンクされるまで Inspector の言語は英語にフォールバックします。",
                         "此相框尚未被任何受管组引用。在恢复连接前，Inspector 语言会回退为英文。",
                         "이 프레임은 어떤 관리 그룹에서도 참조되지 않습니다. 연결이 복구될 때까지 Inspector 언어는 영어로 대체됩니다."),
                     MessageType.Warning);

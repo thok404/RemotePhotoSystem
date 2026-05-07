@@ -19,7 +19,7 @@ namespace RemotePhotoSystem.Editor
                 EditorGUILayout.HelpBox(
                     L(language,
                         "This group is not linked to a Remote Photo Manager. Inspector language falls back to English until the link is restored.",
-                        "このグループは Remote Photo Manager にリンクされていません。リンクが復旧するまで Inspector の言語は英語にフォールバックします。",
+                        "このグループは Remote Photo Manager にリンクされていません。リンクされるまで Inspector の言語は英語にフォールバックします。",
                         "此组尚未连接到 Remote Photo Manager。在恢复连接前，Inspector 语言会回退为英文。",
                         "이 그룹은 Remote Photo Manager에 연결되어 있지 않습니다. 연결이 복구될 때까지 Inspector 언어는 영어로 대체됩니다."),
                     MessageType.Warning);
