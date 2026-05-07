@@ -1,7 +1,7 @@
 ```yaml
 codex_project_backup:
   project_name: RemotePhotoSystem
-  repository_root: E:\VRCProject\PhotoFrame\Assets\RemotePhotoSystem
+  repository_root: .
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   project_type: VRChat World / Unity / UdonSharp package
   current_date_recorded: 2026-05-08
@@ -9,6 +9,7 @@ codex_project_backup:
     - current version is treated as the initial public version
     - old compatibility fields and starter tooling were removed
     - Docs and WebTool are separate documentation/tooling areas
+    - package is distributed under Apache-2.0
 
   scope:
     included:
@@ -295,6 +296,29 @@ codex_project_backup:
   documentation:
     repository_path: Docs
     status: ignored by package git repository
+
+  license:
+    type: Apache-2.0
+    copyright_holder: thok404
+    applies_to:
+      - code
+      - shaders
+      - prefabs
+      - models
+      - textures
+      - icons
+      - samples
+    notice_file: NOTICE.md
+    asset_origin_summary:
+      - bundled example landscape images were generated with ChatGPT
+      - bundled simple geometric UI icons were generated with ChatGPT
+      - bundled frame normal/detail texture was generated with ChatGPT
+      - bundled assets are curated or edited for this project
+    external_dependencies:
+      - VRChat SDK is required but not distributed in this repository
+      - UdonSharp is required but not distributed in this repository
+    separate_products:
+      - sponsor or paid frame model packs use their own license when distributed separately
 
   key_files:
     runtime:

@@ -53,6 +53,20 @@ Other fields such as `id`, `tags`, `note`, and `metadata` are for gallery manage
 - Remote images must be direct image URLs supported by VRChat image loading.
 - Photo frame materials should use the shaders included in this package.
 
+## License
+
+RemotePhotoSystem is distributed under the Apache License 2.0. This applies to
+the core package and bundled assets in this repository unless a file states
+otherwise.
+
+Bundled example landscape images, simple geometric UI icons, and the frame
+normal/detail texture were generated with ChatGPT and curated or edited for this
+project.
+
+VRChat SDK and UdonSharp are external requirements and are not included in this
+repository. Separately distributed sponsor or paid frame model packs use their
+own license.
+
 ## Notes
 
 - Only one `RemotePhotoManager` should exist in a scene.
