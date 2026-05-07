@@ -1,0 +1,30 @@
+{
+  "entries": [
+    {
+      "id": "landscape-sample-001",
+      "url": "https://example.github.io/remote-photo-system/landscape-001.jpg",
+      "orientation": "Landscape",
+      "tags": ["sample"],
+      "note": "Replace this URL in the web Gallery Manager.",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "checkedAt": "",
+        "status": "manual"
+      }
+    },
+    {
+      "id": "portrait-sample-001",
+      "url": "https://example.github.io/remote-photo-system/portrait-001.jpg",
+      "orientation": "Portrait",
+      "tags": ["sample"],
+      "note": "Replace this URL in the web Gallery Manager.",
+      "metadata": {
+        "width": 1080,
+        "height": 1920,
+        "checkedAt": "",
+        "status": "manual"
+      }
+    }
+  ]
+}
