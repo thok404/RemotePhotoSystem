@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RemotePhotoSystem Gallery Manager</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app">
+    <section class="header">
+      <div>
+        <p class="eyebrow">RemotePhotoSystem</p>
+        <h1>Gallery Manager</h1>
+      </div>
+      <div class="file-actions">
+        <button id="importJsonButton">Import JSON</button>
+        <button id="importTxtButton">Import URL TXT</button>
+        <button id="exportButton" class="primary">Export Unity JSON</button>
+        <input id="jsonInput" type="file" accept=".json,application/json" hidden>
+        <input id="txtInput" type="file" accept=".txt,text/plain" hidden>
+      </div>
+    </section>
+
+    <section class="summary">
+      <div><strong id="totalCount">0</strong><span>Total</span></div>
+      <div><strong id="landscapeCount">0</strong><span>Landscape</span></div>
+      <div><strong id="portraitCount">0</strong><span>Portrait</span></div>
+      <div><strong id="invalidCount">0</strong><span>Invalid URL</span></div>
+      <div><strong id="selectedCount">0</strong><span>Selected</span></div>
+      <div><strong id="metadataCount">0</strong><span>Metadata OK</span></div>
+    </section>
+
+    <section class="panel import-panel">
+      <div>
+        <label for="bulkUrls">Bulk URL Import</label>
+        <textarea id="bulkUrls" rows="6" placeholder="Paste one image URL per line"></textarea>
+      </div>
+      <div class="stack">
+        <label for="bulkOrientation">Default Orientation</label>
+        <select id="bulkOrientation">
+          <option value="Landscape">Landscape</option>
+          <option value="Portrait">Portrait</option>
+        </select>
+        <button id="addEntryButton">Add Blank Entry</button>
+        <button id="bulkImportButton" class="primary">Import Pasted URLs</button>
+      </div>
+    </section>
+
+    <section class="panel controls">
+      <div class="control-grid">
+        <label>
+          Search
+          <input id="searchInput" type="search" placeholder="URL, ID, tag, note">
+        </label>
+        <label>
+          Orientation
+          <select id="orientationFilter">
+            <option value="All">All</option>
+            <option value="Landscape">Landscape</option>
+            <option value="Portrait">Portrait</option>
+          </select>
+        </label>
+        <label>
+          Metadata
+          <select id="metadataFilter">
+            <option value="All">All</option>
+            <option value="Missing">Missing</option>
+            <option value="Ok">OK</option>
+            <option value="Error">Error</option>
+          </select>
+        </label>
+        <label>
+          Page Size
+          <select id="pageSizeSelect">
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+          </select>
+        </label>
+      </div>
+      <div class="button-row">
+        <button id="selectPageButton">Select Page</button>
+        <button id="selectFilteredButton">Select Filtered</button>
+        <button id="clearSelectionButton">Clear Selection</button>
+        <button id="prevPageButton">Previous</button>
+        <span id="pageLabel">Page 1 / 1</span>
+        <button id="nextPageButton">Next</button>
+      </div>
+    </section>
+
+    <section class="panel batch-panel">
+      <div class="button-row">
+        <button id="batchLandscapeButton">Set Selected Landscape</button>
+        <button id="batchPortraitButton">Set Selected Portrait</button>
+        <button id="generateIdsButton">Generate IDs</button>
+        <button id="dedupeButton">Remove Duplicate URLs</button>
+        <button id="deleteSelectedButton" class="danger">Delete Selected</button>
+      </div>
+      <div class="tag-row">
+        <input id="tagInput" type="text" placeholder="tag">
+        <button id="addTagButton">Add Tag To Selected</button>
+        <button id="removeTagButton">Remove Tag From Selected</button>
+      </div>
+    </section>
+
+    <section class="panel metadata-panel">
+      <div class="control-grid">
+        <label>
+          Probe Scope
+          <select id="probeScope">
+            <option value="Selected">Selected</option>
+            <option value="Filtered">Filtered</option>
+            <option value="Missing">Missing Metadata</option>
+            <option value="All">All</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input id="forceRefreshProbe" type="checkbox">
+          Force Refresh
+        </label>
+        <label class="checkbox-label">
+          <input id="overwriteOrientation" type="checkbox" checked>
+          Apply Detected Orientation
+        </label>
+        <button id="probeButton" class="primary">Probe Image Sizes</button>
+      </div>
+      <progress id="probeProgress" value="0" max="1"></progress>
+      <p id="probeStatus">Idle</p>
+    </section>
+
+    <section class="table-shell">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>ID</th>
+            <th>URL</th>
+            <th>Orientation</th>
+            <th>Tags</th>
+            <th>Note</th>
+            <th>Metadata</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="entryTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>
