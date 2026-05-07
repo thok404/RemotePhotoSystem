@@ -49,9 +49,16 @@ Other fields such as `id`, `tags`, `note`, and `metadata` are for gallery manage
 
 ## Requirements
 
-- VRChat SDK with UdonSharp support.
+- Unity `2022.3.22f1`.
+- VRChat SDK - Worlds `3.10.3`.
+- VRChat SDK - Base `3.10.3`.
+- UdonSharp integration bundled with VRChat SDK - Worlds `3.10.3`.
 - Remote images must be direct image URLs supported by VRChat image loading.
 - Photo frame materials should use the shaders included in this package.
+
+RemotePhotoSystem was developed and tested with the versions above. Older Unity,
+VRChat SDK, or UdonSharp environments may be missing APIs used by this package
+and may not work correctly.
 
 ## License
 
@@ -64,8 +71,7 @@ normal/detail texture were generated with ChatGPT and curated or edited for this
 project.
 
 VRChat SDK and UdonSharp are external requirements and are not included in this
-repository. Separately distributed sponsor or paid frame model packs use their
-own license.
+repository.
 
 ## Notes
 

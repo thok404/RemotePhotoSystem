@@ -5,6 +5,12 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   project_type: VRChat World / Unity / UdonSharp package
   current_date_recorded: 2026-05-08
+  developed_with:
+    unity: 2022.3.22f1
+    vrchat_sdk_worlds: 3.10.3
+    vrchat_sdk_base: 3.10.3
+    udonsharp: bundled with VRChat SDK - Worlds 3.10.3
+    compatibility_note: lower dependency versions may miss APIs required by this package
   baseline_status:
     - current version is treated as the initial public version
     - old compatibility fields and starter tooling were removed
@@ -317,8 +323,6 @@ codex_project_backup:
     external_dependencies:
       - VRChat SDK is required but not distributed in this repository
       - UdonSharp is required but not distributed in this repository
-    separate_products:
-      - sponsor or paid frame model packs use their own license when distributed separately
 
   key_files:
     runtime:

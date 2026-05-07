@@ -10,6 +10,3 @@ are distributed under the same Apache-2.0 license as the project.
 
 VRChat SDK and UdonSharp are external requirements and are not distributed as
 part of this repository.
-
-Separately distributed sponsor or paid frame model packs are not covered by
-this repository license unless they explicitly include this license.
