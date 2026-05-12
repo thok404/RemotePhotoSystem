@@ -191,10 +191,41 @@ namespace RemotePhotoSystem
 
         public void ApplyBakedGallery()
         {
-            landscapeUrls = bakedLandscapeUrls == null ? new VRCUrl[0] : bakedLandscapeUrls;
-            portraitUrls = bakedPortraitUrls == null ? new VRCUrl[0] : bakedPortraitUrls;
-            hasGalleryData = GetLandscapeCount() > 0 || GetPortraitCount() > 0;
-            lastGalleryError = hasGalleryData ? string.Empty : "Local gallery is empty.";
+            if (bakedLandscapeUrls == null)
+            {
+                if (landscapeUrls == null || landscapeUrls.Length != 0)
+                {
+                    landscapeUrls = new VRCUrl[0];
+                }
+            }
+            else if (landscapeUrls != bakedLandscapeUrls)
+            {
+                landscapeUrls = bakedLandscapeUrls;
+            }
+
+            if (bakedPortraitUrls == null)
+            {
+                if (portraitUrls == null || portraitUrls.Length != 0)
+                {
+                    portraitUrls = new VRCUrl[0];
+                }
+            }
+            else if (portraitUrls != bakedPortraitUrls)
+            {
+                portraitUrls = bakedPortraitUrls;
+            }
+
+            bool nextHasGalleryData = GetLandscapeCount() > 0 || GetPortraitCount() > 0;
+            if (hasGalleryData != nextHasGalleryData)
+            {
+                hasGalleryData = nextHasGalleryData;
+            }
+
+            string nextError = hasGalleryData ? string.Empty : "Local gallery is empty.";
+            if (lastGalleryError != nextError)
+            {
+                lastGalleryError = nextError;
+            }
         }
 
         public VRCUrl SelectLandscapeUrl(VRCUrl[] selectedUrls, int selectedLength)
@@ -320,6 +351,12 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            if (!Networking.IsOwner(gameObject))
+            {
+                LogDebug("Cache used locally by frame: " + urlString + ". Synced preload order is owner-managed.");
+                return;
+            }
+
             RemovePreloadUrl(url);
             LogDebug("Cache used by frame: " + urlString + ". Cached=" + GetCachedTextureCount() + "/" + GetMaxCachedTextures());
             RefreshPreloadPredictions();
@@ -332,6 +369,13 @@ namespace RemotePhotoSystem
             {
                 lastPreloadStatus = lastGalleryError;
                 LogDebug("Prepare skipped: " + lastGalleryError);
+                return;
+            }
+
+            if (!Networking.IsOwner(gameObject))
+            {
+                lastPreloadStatus = "Waiting for manager owner preload order.";
+                LogDebug("Prepare skipped on non-owner. Waiting for synced preload order.");
                 return;
             }
 
@@ -508,8 +552,17 @@ namespace RemotePhotoSystem
                     return;
                 }
 
-                LogDebug("Preload non-retryable error, replacing this prediction slot immediately: " + _activePreloadUrlString);
-                ReplaceFailedPreloadUrl(_activePreloadLandscape, _activePreloadIndex);
+                if (Networking.IsOwner(gameObject))
+                {
+                    LogDebug("Preload non-retryable error, replacing this prediction slot immediately: " + _activePreloadUrlString);
+                    ReplaceFailedPreloadUrl(_activePreloadLandscape, _activePreloadIndex);
+                }
+                else
+                {
+                    LogDebug("Preload non-retryable error on non-owner, keeping synced prediction slot: " + _activePreloadUrlString);
+                    AdvancePreloadCursor();
+                }
+
                 _activePreloadRetryCount = 0;
                 ScheduleNextPreloadDownload();
                 return;
@@ -533,8 +586,17 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            LogDebug("Preload failed after retries, replacing this prediction slot only: " + _activePreloadUrlString);
-            ReplaceFailedPreloadUrl(_activePreloadLandscape, _activePreloadIndex);
+            if (Networking.IsOwner(gameObject))
+            {
+                LogDebug("Preload failed after retries, replacing this prediction slot only: " + _activePreloadUrlString);
+                ReplaceFailedPreloadUrl(_activePreloadLandscape, _activePreloadIndex);
+            }
+            else
+            {
+                LogDebug("Preload failed after retries on non-owner, keeping synced prediction slot: " + _activePreloadUrlString);
+                AdvancePreloadCursor();
+            }
+
             _activePreloadRetryCount = 0;
             ScheduleNextPreloadDownload();
         }
@@ -584,7 +646,11 @@ namespace RemotePhotoSystem
                 preloadReady = preloadLandscapeUrls != null && preloadPortraitUrls != null;
                 lastPreloadStatus = "Preload disabled.";
                 LogDebug("Preload disabled. Prediction cache is inactive.");
-                RequestSerialization();
+                if (Networking.IsOwner(gameObject))
+                {
+                    RequestSerialization();
+                }
+
                 return;
             }
 
@@ -757,7 +823,7 @@ namespace RemotePhotoSystem
                 SetActivePreloadLocation(url);
                 _preloadScanOrderedIndex++;
 
-                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTexture(url) == null)
+                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTextureQuiet(url) == null)
                 {
                     return url;
                 }
@@ -774,7 +840,7 @@ namespace RemotePhotoSystem
                     _activePreloadOrderedIndex = FindUrlInArray(preloadOrderedUrls, GetSafeUrlString(url));
                     _preloadScanIndex++;
 
-                    if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTexture(url) == null)
+                    if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTextureQuiet(url) == null)
                     {
                         return url;
                     }
@@ -822,11 +888,19 @@ namespace RemotePhotoSystem
             preloadReady = true;
             lastPreloadStatus = "Prediction cache ready.";
             LogDebug("Preload scan finished. Prediction cache ready.");
-            RequestSerialization();
+            if (Networking.IsOwner(gameObject))
+            {
+                RequestSerialization();
+            }
         }
 
         private void ReplaceFailedPreloadUrl(bool landscape, int index)
         {
+            if (!Networking.IsOwner(gameObject))
+            {
+                return;
+            }
+
             VRCUrl replacement = landscape ? BuildReplacementLandscapeUrl() : BuildReplacementPortraitUrl();
             if (_activePreloadOrderedIndex >= 0 && preloadOrderedUrls != null && _activePreloadOrderedIndex < preloadOrderedUrls.Length)
             {
@@ -1186,6 +1260,11 @@ namespace RemotePhotoSystem
 
         private VRCUrl SelectOrderedPreloadUrl(bool landscape, VRCUrl[] selectedUrls, int selectedLength)
         {
+            if (!Networking.IsOwner(gameObject))
+            {
+                return null;
+            }
+
             int index = 0;
             while (preloadOrderedUrls != null && index < preloadOrderedUrls.Length)
             {
@@ -1595,6 +1674,11 @@ namespace RemotePhotoSystem
 
         private void RemovePreloadUrl(VRCUrl url)
         {
+            if (!Networking.IsOwner(gameObject))
+            {
+                return;
+            }
+
             preloadOrderedUrls = RemoveUrlFromArray(preloadOrderedUrls, url);
             preloadLandscapeUrls = RemoveUrlFromArray(preloadLandscapeUrls, url);
             preloadPortraitUrls = RemoveUrlFromArray(preloadPortraitUrls, url);

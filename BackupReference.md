@@ -3,6 +3,7 @@ codex_project_backup:
   project_name: RemotePhotoSystem
   repository_root: .
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
+  documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
   current_date_recorded: 2026-05-08
   developed_with:
@@ -302,6 +303,15 @@ codex_project_backup:
   documentation:
     repository_path: Docs
     status: ignored by package git repository
+    public_url: https://thok404.github.io/RemotePhotoDocs/
+
+  release_distribution:
+    release_directory: Release
+    release_directory_status: ignored by package git repository
+    github_release_assets:
+      - Release/RemotePhotoSystem_v0.95.unitypackage
+      - Release/RemotePhotoSystem_WebTool_v0.95.zip
+    webtool_release_source: WebTool
 
   license:
     type: Apache-2.0

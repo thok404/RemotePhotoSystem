@@ -167,10 +167,10 @@ namespace RemotePhotoSystem.Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("managedGroups"),
                 G(language,
                     "Managed Groups", "管理グループ", "受管组", "관리 그룹",
-                    "Only listed Groups are controlled by this Manager.",
-                    "ここにある Groups だけをこの Manager が制御します。",
-                    "只有列在这里的 Groups 会被此 Manager 控制。",
-                    "여기에 있는 Groups만 이 Manager가 제어합니다."),
+                    "Only listed Groups are controlled. Order drives preload and synced loading order.",
+                    "ここにある Groups だけを制御します。順序は Preload と同期読み込み順に使います。",
+                    "只控制列出的 Groups。顺序会影响预加载和同步加载顺序。",
+                    "여기에 있는 Groups만 제어합니다. 순서는 Preload와 동기화 로딩 순서에 사용됩니다."),
                 true);
 
             EditorGUILayout.BeginHorizontal();

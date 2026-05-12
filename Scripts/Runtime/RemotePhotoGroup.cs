@@ -17,7 +17,9 @@ namespace RemotePhotoSystem
         public RemotePhotoFrame[] targets = new RemotePhotoFrame[0];
 
         [UdonSynced] public VRCUrl[] syncedUrls = new VRCUrl[0];
+        [UdonSynced] public int[] syncedLoadOrderSlots = new int[0];
         [UdonSynced] public int selectionRevision;
+        [UdonSynced] public int loadOrderRevision;
         [UdonSynced] public double nextAllowedTriggerServerTime;
 
         [HideInInspector] public string lastTriggerError = string.Empty;
@@ -212,6 +214,40 @@ namespace RemotePhotoSystem
                 syncedUrls = new VRCUrl[targetCount];
             }
 
+            if (syncedLoadOrderSlots == null || syncedLoadOrderSlots.Length != targetCount)
+            {
+                syncedLoadOrderSlots = new int[targetCount];
+                ResetSyncedLoadOrder();
+            }
+        }
+
+        private void ResetSyncedLoadOrder()
+        {
+            int index = 0;
+            while (syncedLoadOrderSlots != null && index < syncedLoadOrderSlots.Length)
+            {
+                syncedLoadOrderSlots[index] = -1;
+                index++;
+            }
+        }
+
+        private void BuildSyncedLoadOrder()
+        {
+            EnsureSyncedArrays();
+            ResetSyncedLoadOrder();
+
+            int writeIndex = 0;
+            int slotIndex = 0;
+            while (targets != null && syncedUrls != null && slotIndex < targets.Length && slotIndex < syncedUrls.Length)
+            {
+                if (targets[slotIndex] != null && RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slotIndex]))
+                {
+                    syncedLoadOrderSlots[writeIndex] = slotIndex;
+                    writeIndex++;
+                }
+
+                slotIndex++;
+            }
         }
 
         private void RegisterPreloadDownloadMaterial()
@@ -274,6 +310,8 @@ namespace RemotePhotoSystem
             }
 
             selectionRevision++;
+            BuildSyncedLoadOrder();
+            loadOrderRevision = selectionRevision;
             ApplyCurrentSelection();
             return true;
         }
@@ -425,27 +463,124 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            if (HasValidSyncedLoadOrder())
+            {
+                int orderIndex = 0;
+                while (orderIndex < syncedLoadOrderSlots.Length)
+                {
+                    int slot = syncedLoadOrderSlots[orderIndex];
+                    if (slot >= 0)
+                    {
+                        ApplySelectionSlot(slot);
+                    }
+
+                    orderIndex++;
+                }
+
+                return;
+            }
+
             int index = 0;
             while (index < targets.Length)
             {
-                RemotePhotoFrame target = targets[index];
-                if (target == null)
+                ApplySelectionSlot(index);
+                index++;
+            }
+        }
+
+        private void ApplySelectionSlot(int index)
+        {
+            if (targets == null ||
+                syncedUrls == null ||
+                index < 0 ||
+                index >= targets.Length ||
+                index >= syncedUrls.Length)
+            {
+                return;
+            }
+
+            RemotePhotoFrame target = targets[index];
+            if (target == null)
+            {
+                return;
+            }
+
+            if (!RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[index]))
+            {
+                target.ClearPhoto();
+                return;
+            }
+
+            target.LoadPhotoFromManager(syncedUrls[index], manager, selectionRevision);
+        }
+
+        private bool HasValidSyncedLoadOrder()
+        {
+            if (syncedLoadOrderSlots == null ||
+                targets == null ||
+                syncedUrls == null ||
+                syncedLoadOrderSlots.Length != targets.Length ||
+                syncedUrls.Length != targets.Length)
+            {
+                return false;
+            }
+
+            int expectedCount = CountValidSelectionSlots();
+            int actualCount = 0;
+            int orderIndex = 0;
+            while (orderIndex < syncedLoadOrderSlots.Length)
+            {
+                int slot = syncedLoadOrderSlots[orderIndex];
+                if (slot >= 0)
                 {
-                    index++;
-                    continue;
+                    if (slot >= targets.Length ||
+                        targets[slot] == null ||
+                        !RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slot]) ||
+                        IsLoadOrderSlotRepeated(slot, orderIndex))
+                    {
+                        return false;
+                    }
+
+                    actualCount++;
                 }
 
-                if (syncedUrls[index] == null || !RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[index]))
+                orderIndex++;
+            }
+
+            return actualCount == expectedCount;
+        }
+
+        private int CountValidSelectionSlots()
+        {
+            int count = 0;
+            int index = 0;
+            while (targets != null && syncedUrls != null && index < targets.Length && index < syncedUrls.Length)
+            {
+                if (targets[index] != null && RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[index]))
                 {
-                    target.ClearPhoto();
-                }
-                else
-                {
-                    target.LoadPhotoFromManager(syncedUrls[index], manager);
+                    count++;
                 }
 
                 index++;
             }
+
+            return count;
+        }
+
+        private bool IsLoadOrderSlotRepeated(int slot, int beforeIndex)
+        {
+            int index = 0;
+            while (syncedLoadOrderSlots != null && index < beforeIndex)
+            {
+                if (syncedLoadOrderSlots[index] == slot)
+                {
+                    return true;
+                }
+
+                index++;
+            }
+
+            return false;
         }
 
         private bool HasAnySyncedUrl()

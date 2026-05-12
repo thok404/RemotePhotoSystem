@@ -14,6 +14,7 @@ namespace RemotePhotoSystem
         public int materialSlot;
         public string texturePropertyName = "_MainTex";
         public Texture defaultTexture;
+        public bool useFallbackTexture = true;
         public Texture fallbackTexture;
         public RemotePhotoFitMode photoFitMode = RemotePhotoFitMode.Crop;
         public RemotePhotoProjectionMode projectionMode = RemotePhotoProjectionMode.MeshUv;
@@ -31,6 +32,7 @@ namespace RemotePhotoSystem
 
         private Material _runtimeMaterial;
         private MeshRenderer _meshRenderer;
+        private MeshFilter _meshFilter;
         private VRCImageDownloader _downloader;
         private IVRCImageDownload _currentDownload;
         private TextureInfo _textureInfo;
@@ -40,9 +42,14 @@ namespace RemotePhotoSystem
         private string _pendingGalleryCacheUrl = string.Empty;
         private int _activeFitMode;
         private int _activeRetryCount;
+        private int _activeSelectionRevision = NoSelectionRevision;
         private RemotePhotoManager _activeManager;
         private float _resolvedFrameAspectRatio = 1.7777778f;
+        private int _cachedShortestAxis = 2;
+        private Vector3 _cachedBoundsCenter = Vector3.zero;
+        private Vector3 _cachedBoundsSize = Vector3.one;
         private const int DefaultDownloadRetryAttempts = 3;
+        private const int NoSelectionRevision = -1;
         private const float DefaultDownloadRetryDelaySeconds = 2f;
         private const float GalleryCachePollDelaySeconds = 0.25f;
         private const string RemotePhotoBackgroundColorPropertyName = "_RemotePhotoBackgroundColor";
@@ -66,6 +73,7 @@ namespace RemotePhotoSystem
         {
             InitializeMaterial();
             EnsureDownloader();
+            RefreshCachedProjectionGeometry();
             RefreshResolvedFrameAspectRatio();
             ApplyDefault();
         }
@@ -83,6 +91,7 @@ namespace RemotePhotoSystem
         public void LoadPhoto(VRCUrl url)
         {
             _activeManager = null;
+            _activeSelectionRevision = NoSelectionRevision;
 
             if (_runtimeMaterial == null)
             {
@@ -94,6 +103,7 @@ namespace RemotePhotoSystem
                 _activeVrcUrl = null;
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
+                _pendingGalleryCacheUrl = string.Empty;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
                 CancelCurrentDownload();
@@ -114,7 +124,7 @@ namespace RemotePhotoSystem
             StartActiveDownload();
         }
 
-        public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager)
+        public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager, int selectionRevision)
         {
             _activeManager = manager;
 
@@ -123,11 +133,21 @@ namespace RemotePhotoSystem
                 InitializeMaterial();
             }
 
+            if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                selectionRevision == _activeSelectionRevision &&
+                url.Get() == _activeUrl)
+            {
+                return;
+            }
+
+            _activeSelectionRevision = selectionRevision;
+
             if (!RemotePhotoUrlUtility.IsValidVrcUrl(url))
             {
                 _activeVrcUrl = null;
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
+                _pendingGalleryCacheUrl = string.Empty;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
                 CancelCurrentDownload();
@@ -143,6 +163,7 @@ namespace RemotePhotoSystem
                     _activeVrcUrl = url;
                     _activeUrl = url.Get();
                     _pendingRetryUrl = string.Empty;
+                    _pendingGalleryCacheUrl = string.Empty;
                     _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                     _activeRetryCount = 0;
                     CancelCurrentDownload();
@@ -168,6 +189,7 @@ namespace RemotePhotoSystem
 
             LoadPhoto(url);
             _activeManager = manager;
+            _activeSelectionRevision = selectionRevision;
         }
 
         public void ClearPhoto()
@@ -177,6 +199,7 @@ namespace RemotePhotoSystem
             _pendingRetryUrl = string.Empty;
             _pendingGalleryCacheUrl = string.Empty;
             _activeManager = null;
+            _activeSelectionRevision = NoSelectionRevision;
             _activeRetryCount = 0;
             CancelCurrentDownload();
             ApplyFallback();
@@ -215,6 +238,8 @@ namespace RemotePhotoSystem
 
             _currentDownload = result;
             _activeRetryCount = 0;
+            _pendingRetryUrl = string.Empty;
+            _pendingGalleryCacheUrl = string.Empty;
             LogDownload("Download success: " + gameObject.name + " -> " + _activeUrl);
             if (_activeManager != null)
             {
@@ -306,6 +331,13 @@ namespace RemotePhotoSystem
                 _meshRenderer = GetComponent<MeshRenderer>();
             }
 
+            if (_meshFilter == null)
+            {
+                _meshFilter = GetComponent<MeshFilter>();
+            }
+
+            RefreshCachedProjectionGeometry();
+
             if (_meshRenderer == null)
             {
                 return;
@@ -377,7 +409,7 @@ namespace RemotePhotoSystem
 
         private void ApplyFallback()
         {
-            if (fallbackTexture != null)
+            if (useFallbackTexture && fallbackTexture != null)
             {
                 ApplyTexture(fallbackTexture, RemotePhotoFitModeUtility.ToInt(RemotePhotoFitMode.Contain));
             }
@@ -410,31 +442,13 @@ namespace RemotePhotoSystem
         {
             _runtimeMaterial.SetFloat(RemotePhotoProjectionModePropertyName, GetProjectionModeFloat());
             _runtimeMaterial.SetFloat(RemotePhotoBoxHorizontalFlipPropertyName, GetBoxHorizontalFlipFloat());
-
-            MeshFilter meshFilter = GetComponent<MeshFilter>();
-            if (meshFilter == null || meshFilter.sharedMesh == null)
-            {
-                _runtimeMaterial.SetFloat(RemotePhotoShortestAxisPropertyName, 2f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterXPropertyName, 0f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterYPropertyName, 0f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterZPropertyName, 0f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeXPropertyName, 1f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeYPropertyName, 1f);
-                _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeZPropertyName, 1f);
-                return;
-            }
-
-            Bounds bounds = meshFilter.sharedMesh.bounds;
-            Vector3 size = bounds.size;
-            int shortestAxis = GetShortestAxis(size);
-
-            _runtimeMaterial.SetFloat(RemotePhotoShortestAxisPropertyName, GetAxisFloat(shortestAxis));
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterXPropertyName, bounds.center.x);
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterYPropertyName, bounds.center.y);
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterZPropertyName, bounds.center.z);
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeXPropertyName, Mathf.Max(0.0001f, Mathf.Abs(size.x)));
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeYPropertyName, Mathf.Max(0.0001f, Mathf.Abs(size.y)));
-            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeZPropertyName, Mathf.Max(0.0001f, Mathf.Abs(size.z)));
+            _runtimeMaterial.SetFloat(RemotePhotoShortestAxisPropertyName, GetAxisFloat(_cachedShortestAxis));
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterXPropertyName, _cachedBoundsCenter.x);
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterYPropertyName, _cachedBoundsCenter.y);
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterZPropertyName, _cachedBoundsCenter.z);
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeXPropertyName, _cachedBoundsSize.x);
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeYPropertyName, _cachedBoundsSize.y);
+            _runtimeMaterial.SetFloat(RemotePhotoBoundsSizeZPropertyName, _cachedBoundsSize.z);
         }
 
         private void LogDownload(string message)
@@ -663,13 +677,42 @@ namespace RemotePhotoSystem
                 return 0f;
             }
 
-            MeshFilter meshFilter = GetComponent<MeshFilter>();
-            if (meshFilter == null || meshFilter.sharedMesh == null)
+            if (_meshFilter == null)
+            {
+                _meshFilter = GetComponent<MeshFilter>();
+            }
+
+            if (_meshFilter == null || _meshFilter.sharedMesh == null)
             {
                 return 0f;
             }
 
-            return BuildAspectRatio(meshFilter.sharedMesh.bounds.size, RemotePhotoAxisMode.Auto);
+            return BuildAspectRatio(_meshFilter.sharedMesh.bounds.size, RemotePhotoAxisMode.Auto);
+        }
+
+        private void RefreshCachedProjectionGeometry()
+        {
+            if (_meshFilter == null)
+            {
+                _meshFilter = GetComponent<MeshFilter>();
+            }
+
+            if (_meshFilter == null || _meshFilter.sharedMesh == null)
+            {
+                _cachedShortestAxis = 2;
+                _cachedBoundsCenter = Vector3.zero;
+                _cachedBoundsSize = Vector3.one;
+                return;
+            }
+
+            Bounds bounds = _meshFilter.sharedMesh.bounds;
+            Vector3 size = bounds.size;
+            _cachedShortestAxis = GetShortestAxis(size);
+            _cachedBoundsCenter = bounds.center;
+            _cachedBoundsSize = new Vector3(
+                Mathf.Max(0.0001f, Mathf.Abs(size.x)),
+                Mathf.Max(0.0001f, Mathf.Abs(size.y)),
+                Mathf.Max(0.0001f, Mathf.Abs(size.z)));
         }
 
         private float BuildAspectRatio(Vector3 size, RemotePhotoAxisMode selectedAxisMode)

@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: PhotoLit
-  m_Shader: {fileID: 4800000, guid: 5fe34392a68ed7f4d8607e8861c47bbd, type: 3}
+  m_Name: Floor
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -59,18 +59,6 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _ReflectionTex0:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _ReflectionTex1:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _RemotePhotoPreloadTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
@@ -84,28 +72,12 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _PhotoRotationDegrees: 0
-    - _RemotePhotoBoundsCenterX: 0
-    - _RemotePhotoBoundsCenterY: 0
-    - _RemotePhotoBoundsCenterZ: 0
-    - _RemotePhotoBoundsSizeX: 1
-    - _RemotePhotoBoundsSizeY: 1
-    - _RemotePhotoBoundsSizeZ: 1
-    - _RemotePhotoBoxHorizontalFlip: 0
-    - _RemotePhotoFitMode: 0
-    - _RemotePhotoProjectionMode: 0
-    - _RemotePhotoShortestAxis: 2
-    - _RemotePhotoUvOffsetX: 0
-    - _RemotePhotoUvOffsetY: 0
-    - _RemotePhotoUvScaleX: 1
-    - _RemotePhotoUvScaleY: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RemotePhotoBackgroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

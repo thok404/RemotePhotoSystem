@@ -58,10 +58,10 @@ namespace RemotePhotoSystem.Editor
                 serializedObject.FindProperty("targets"),
                 G(language,
                     "Frames", "フレーム", "相框", "프레임",
-                    "Photos are assigned to Frames in this order.",
-                    "写真はこの順序で Frames に割り当てられます。",
-                    "图片会按此顺序分配给 Frames。",
-                    "사진은 이 순서대로 Frames에 할당됩니다."),
+                    "Photos are assigned and loaded in this synced order.",
+                    "写真はこの同期順で Frames に割り当て、読み込みます。",
+                    "图片会按这个同步顺序分配并加载。",
+                    "사진은 이 동기화 순서로 Frames에 할당되고 로드됩니다."),
                 true);
 
             if (multiObjectEditing)

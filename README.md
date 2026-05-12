@@ -1,5 +1,7 @@
 # RemotePhotoSystem
 
+Documentation: https://thok404.github.io/RemotePhotoDocs/
+
 RemotePhotoSystem is a VRChat World photo frame system for loading remote image URLs into in-world frames.
 
 It is designed around a local gallery JSON workflow:

@@ -80,13 +80,24 @@ namespace RemotePhotoSystem.Editor
                     "リモート写真に置き換わるまで表示します。",
                     "在远程图片替换前显示。",
                     "원격 사진으로 바뀌기 전까지 표시됩니다."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("fallbackTexture"),
+            SerializedProperty useFallbackTextureProperty = serializedObject.FindProperty("useFallbackTexture");
+            EditorGUILayout.PropertyField(useFallbackTextureProperty,
                 G(language,
-                    "Fallback Texture", "フォールバックテクスチャ", "回退贴图", "폴백 텍스처",
-                    "Shown when the current photo cannot load.",
-                    "現在の写真を読み込めない時に表示します。",
-                    "当前图片无法加载时显示。",
-                    "현재 사진을 불러올 수 없을 때 표시됩니다."));
+                    "Use Fallback Texture", "フォールバックを使用", "启用回退贴图", "폴백 텍스처 사용",
+                    "Use Fallback Texture when loading fails. Off keeps the current display.",
+                    "読み込み失敗時に Fallback Texture を使います。Off では現在の表示を維持します。",
+                    "加载失败时使用 Fallback Texture。关闭时保持当前显示。",
+                    "로드 실패 시 Fallback Texture를 사용합니다. 끄면 현재 표시를 유지합니다."));
+            using (new EditorGUI.DisabledScope(!useFallbackTextureProperty.hasMultipleDifferentValues && !useFallbackTextureProperty.boolValue))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("fallbackTexture"),
+                    G(language,
+                        "Fallback Texture", "フォールバックテクスチャ", "回退贴图", "폴백 텍스처",
+                        "Texture shown when fallback is enabled and loading fails.",
+                        "フォールバック有効時、読み込み失敗で表示するテクスチャです。",
+                        "启用回退时，加载失败后显示的贴图。",
+                        "폴백이 켜져 있을 때 로드 실패 후 표시할 텍스처입니다."));
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("backgroundColor"),
                 G(language,
                     "Background Color", "背景色", "背景颜色", "배경색",
