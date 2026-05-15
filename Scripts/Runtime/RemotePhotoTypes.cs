@@ -17,13 +17,6 @@ namespace RemotePhotoSystem
         NonPreload = 1
     }
 
-    public enum RemotePhotoPermissionMode
-    {
-        Everyone = 0,
-        MasterOnly = 1,
-        OwnerOnly = 2
-    }
-
     public enum RemotePhotoButtonAction
     {
         Random = 0,

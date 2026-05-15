@@ -1,6 +1,7 @@
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
+using VRC.Udon.Common.Interfaces;
 
 namespace RemotePhotoSystem
 {
@@ -12,7 +13,6 @@ namespace RemotePhotoSystem
         private const int TriggerActionNext = 2;
 
         [HideInInspector] public RemotePhotoManager manager;
-        public RemotePhotoPermissionMode permissionMode = RemotePhotoPermissionMode.Everyone;
         public float triggerCooldownSeconds = 2f;
         public RemotePhotoFrame[] targets = new RemotePhotoFrame[0];
 
@@ -51,21 +51,39 @@ namespace RemotePhotoSystem
             TriggerInternal(TriggerActionNext);
         }
 
+        public void _RequestTriggerRandom()
+        {
+            TriggerInternalAsMaster(TriggerActionRandom);
+        }
+
+        public void _RequestTriggerPrevious()
+        {
+            TriggerInternalAsMaster(TriggerActionPrevious);
+        }
+
+        public void _RequestTriggerNext()
+        {
+            TriggerInternalAsMaster(TriggerActionNext);
+        }
+
         private void TriggerInternal(int triggerAction)
         {
             lastTriggerError = string.Empty;
 
-            if (!CanTrigger())
+            if (!Networking.IsMaster)
             {
+                SendTriggerRequest(triggerAction);
                 return;
             }
 
-            if (!CanPassTriggerCooldown())
-            {
-                return;
-            }
+            TriggerInternalAsMaster(triggerAction);
+        }
 
-            if (!EnsureLocalOwnership())
+        private void TriggerInternalAsMaster(int triggerAction)
+        {
+            lastTriggerError = string.Empty;
+
+            if (!Networking.IsMaster)
             {
                 return;
             }
@@ -73,6 +91,18 @@ namespace RemotePhotoSystem
             if (manager == null)
             {
                 lastTriggerError = "Remote Photo Manager is missing.";
+                return;
+            }
+
+            manager.EnsureMasterOwnership();
+            if (!Networking.IsOwner(gameObject) || !Networking.IsOwner(manager.gameObject))
+            {
+                lastTriggerError = "Master could not take ownership of this group or its Remote Photo Manager.";
+                return;
+            }
+
+            if (!CanPassTriggerCooldown())
+            {
                 return;
             }
 
@@ -86,12 +116,6 @@ namespace RemotePhotoSystem
             if (!manager.HasGalleryData())
             {
                 lastTriggerError = manager.lastGalleryError;
-                return;
-            }
-
-            if (!EnsureGalleryOwnership())
-            {
-                lastTriggerError = "Could not take ownership of the Remote Photo Manager.";
                 return;
             }
 
@@ -125,56 +149,26 @@ namespace RemotePhotoSystem
             manager.LogDebug("Group trigger applied: " + gameObject.name);
         }
 
+        private void SendTriggerRequest(int triggerAction)
+        {
+            if (triggerAction == TriggerActionRandom)
+            {
+                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerRandom));
+                return;
+            }
+
+            if (triggerAction == TriggerActionPrevious)
+            {
+                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerPrevious));
+                return;
+            }
+
+            SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerNext));
+        }
+
         public override void OnDeserialization()
         {
             ApplyCurrentSelection();
-        }
-
-        private bool CanTrigger()
-        {
-            if (permissionMode == RemotePhotoPermissionMode.MasterOnly && !Networking.IsMaster)
-            {
-                lastTriggerError = "Only the master can trigger this group.";
-                return false;
-            }
-
-            if (permissionMode == RemotePhotoPermissionMode.OwnerOnly && !Networking.IsOwner(gameObject))
-            {
-                lastTriggerError = "Only the owner can trigger this group.";
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool EnsureLocalOwnership()
-        {
-            if (permissionMode == RemotePhotoPermissionMode.MasterOnly && !Networking.IsMaster)
-            {
-                return false;
-            }
-
-            if (!Networking.IsOwner(gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            }
-
-            return Networking.IsOwner(gameObject);
-        }
-
-        private bool EnsureGalleryOwnership()
-        {
-            if (manager == null)
-            {
-                return false;
-            }
-
-            if (!Networking.IsOwner(manager.gameObject))
-            {
-                Networking.SetOwner(Networking.LocalPlayer, manager.gameObject);
-            }
-
-            return Networking.IsOwner(manager.gameObject);
         }
 
         private bool CanPassTriggerCooldown()

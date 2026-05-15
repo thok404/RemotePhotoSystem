@@ -37,15 +37,6 @@ namespace RemotePhotoSystem.Editor
             }
 
             EditorGUILayout.PropertyField(
-                serializedObject.FindProperty("permissionMode"),
-                G(language,
-                    "Permission Mode", "権限モード", "触发权限", "권한 모드",
-                    "Limits who can use this Group's buttons.",
-                    "この Group のボタンを使える人を制限します。",
-                    "限制谁能使用此 Group 的按钮。",
-                    "이 Group의 버튼을 사용할 수 있는 사람을 제한합니다."));
-
-            EditorGUILayout.PropertyField(
                 serializedObject.FindProperty("triggerCooldownSeconds"),
                 G(language,
                     "Trigger Cooldown Seconds", "トリガークールダウン秒数", "触发冷却秒数", "트리거 쿨다운 초",

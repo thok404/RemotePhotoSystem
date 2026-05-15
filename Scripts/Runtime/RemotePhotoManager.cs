@@ -89,6 +89,7 @@ namespace RemotePhotoSystem
         {
             ApplyBakedGallery();
             EnsureCacheArrays();
+            EnsureMasterOwnership();
             LogDebug("Remote Photo Manager started. Landscape=" + GetLandscapeCount() + ", Portrait=" + GetPortraitCount() + ", LoadingMode=" + GetLoadingModeName());
 
             if (IsPreloadEnabled())
@@ -109,6 +110,11 @@ namespace RemotePhotoSystem
             StartPreloadingQueue();
         }
 
+        public override void OnPlayerLeft(VRCPlayerApi player)
+        {
+            EnsureMasterOwnership();
+        }
+
         public bool IsPreloadEnabled()
         {
             return loadingMode == RemotePhotoLoadingMode.Preload;
@@ -116,11 +122,12 @@ namespace RemotePhotoSystem
 
         public void _LoadOnceOnStart()
         {
-            if (!loadOnceOnStart || managedGroups == null)
+            if (!Networking.IsMaster || !loadOnceOnStart || managedGroups == null)
             {
                 return;
             }
 
+            EnsureMasterOwnership();
             int index = 0;
             while (index < managedGroups.Length)
             {
@@ -2015,6 +2022,31 @@ namespace RemotePhotoSystem
             }
 
             return false;
+        }
+
+        public void EnsureMasterOwnership()
+        {
+            if (!Networking.IsMaster)
+            {
+                return;
+            }
+
+            if (!Networking.IsOwner(gameObject))
+            {
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            }
+
+            int index = 0;
+            while (managedGroups != null && index < managedGroups.Length)
+            {
+                RemotePhotoGroup group = managedGroups[index];
+                if (group != null && !Networking.IsOwner(group.gameObject))
+                {
+                    Networking.SetOwner(Networking.LocalPlayer, group.gameObject);
+                }
+
+                index++;
+            }
         }
 
         private string GetSafeUrlString(VRCUrl url)
