@@ -44,6 +44,8 @@ codex_project_backup:
         - preload cache manager
         - Random ReadyPool manager
         - single active Random consume request
+        - Sequence per-group page index state
+        - Sequence preload focus tracking
         - shared retry settings
         - debug logs
         - managed group creation and ordering
@@ -68,6 +70,10 @@ codex_project_backup:
         - preloadOrderedUrls
         - preloadRevision
         - preloadReady
+        - sequenceLandscapePageIndices
+        - sequencePortraitPageIndices
+        - sequenceFocusGroupIndex
+        - sequenceFocusDirection
         - lastGalleryError
         - hasGalleryData
       main_methods:
@@ -111,8 +117,12 @@ codex_project_backup:
         - Random works only when Manager play mode is Random
         - Previous and Next work only when Manager play mode is SequenceForward or SequenceReverse
         - first Previous or Next click loads the first sorted page
-        - landscape frames advance only the landscape cursor
-        - portrait frames advance only the portrait cursor
+        - each Group has its own sequence page index
+        - landscape frames use the landscape page index
+        - portrait frames use the portrait page index
+        - page index changes immediately when Previous or Next is accepted
+        - image loading does not block page changes
+        - old display sessions are invalidated by newer selectionRevision values
         - failed sequence URLs remain in the gallery and can be retried when revisited
       trigger_authority:
         - all players may press trigger buttons
@@ -153,6 +163,13 @@ codex_project_backup:
         - Frame does not insert preload priority requests
         - Frame displays Manager-provided Texture when consumed from ReadyPool
         - Frame keeps the current image while waiting or when fallback is disabled
+      sequence_preload_rule:
+        - Frame does not select Sequence URLs
+        - Frame does not insert preload priority requests
+        - Sequence cache hits are retained by Manager instead of consumed
+        - Sequence cache misses do not make Frame poll continuously
+        - Manager notifies affected Groups when a Sequence URL becomes cached or fails
+        - selectionRevision and request serial prevent old page results from applying to a newer page
       aspect_rules:
         - Manual uses manualAspectRatio and hides axisMode
         - Auto uses mesh bounds and always discards the shortest dimension
@@ -285,12 +302,45 @@ codex_project_backup:
         - failed random preload does not advance an active consume slot
         - Manager continues downloading another random URL
     sequence_failure_rule: failed sequence URLs remain in the gallery and can be retried when revisited
+    sequence_design:
+      enabled_when:
+        - loadingMode == Preload
+        - configuredPlayMode == SequenceForward or SequenceReverse
+      design:
+        - Sequence does not use Random ReadyPool
+        - Sequence uses URL cache semantics, so the same downloaded Texture can be reused by multiple Groups or pages
+        - each managed Group has independent landscape and portrait page indices
+        - SequenceForward and SequenceReverse use one gallery list per orientation and map visual index by sort direction
+        - pageIndex 0 is the first visual page under the current sort direction
+        - Previous and Next immediately create a new selectionRevision and synced URL page
+        - cached slots can display immediately
+        - uncached slots keep the current display until Manager downloads their target URL
+        - old selection results are rejected by selectionRevision and request serial checks
+      preload_focus:
+        - only the last interacted Group is the Sequence preload focus
+        - preload plan follows the focus Group pageIndex and interaction direction
+        - current focus page missing URLs have highest priority
+        - nearby pages around the focus page are predicted after current page demand
+        - old non-focus Group preloads are not protected beyond currently displayed textures
+      cache_lifecycle:
+        - Sequence cached textures are retained in Manager cache when displayed
+        - displayed cached downloads are not disposed while still stored in Manager cache
+        - cache eviction skips displayed URLs and current synced URLs
+        - current page demand can be downloaded even when future preload capacity is full
 
   networking_design:
     current_photo_authority: RemotePhotoGroup.syncedUrls
     synced_slot_order: RemotePhotoGroup.syncedLoadOrderSlots
     random_slot_request_ids: RemotePhotoGroup.syncedSlotRequestIds
     manager_cursor_sync: Sequence Group trigger calls RemotePhotoManager.NotifySelectionStateChanged()
+    sequence_page_sync:
+      - Manager syncs sequenceLandscapePageIndices
+      - Manager syncs sequencePortraitPageIndices
+      - Manager syncs sequenceFocusGroupIndex
+      - Manager syncs sequenceFocusDirection
+      - Group syncs current page URLs through syncedUrls
+      - Group syncs slot order through syncedLoadOrderSlots
+      - clients apply only the latest selectionRevision for each Group
     random_trigger_sync:
       - TriggerRandom is a request entry
       - non-Master sends _RequestTriggerRandom to all clients
@@ -437,6 +487,12 @@ codex_project_backup:
     - Random + Preload active request rejection while incomplete
     - Random + Preload mixed landscape/portrait ReadyPool balance
     - Random + Preload multi-group trigger behavior under Master arbitration
+    - Sequence + Preload immediate page change under rapid Previous/Next clicking
+    - Sequence + Preload latest page only receives late download results
+    - Sequence + Preload focus switches when another Group is interacted
+    - Sequence + Preload cached URL reuse across Groups
+    - SequenceForward visual page order
+    - SequenceReverse visual page order
     - Box projection front/back consistency
     - Horizontal Flip behavior
     - ReferenceBox axis mode behavior
@@ -449,6 +505,32 @@ codex_project_backup:
     - Random + Preload responsiveness is bounded by VRChat image download interval and image source reliability
     - if ReadyPool does not contain enough images for a requested group, only available slots change immediately
     - if preload release stability is poor, keep NonPreload as stable path
+
+  latest_local_work:
+    summary: Sequence mode refactored according to GUIDE
+    files_changed:
+      - Scripts/Runtime/RemotePhotoManager.cs
+      - Scripts/Runtime/RemotePhotoGroup.cs
+      - Scripts/Runtime/RemotePhotoFrame.cs
+      - Scripts/Runtime/RemotePhotoManager.asset
+    behavior_changes:
+      - Sequence Previous and Next no longer wait for image loading
+      - Sequence pages are tracked per Group instead of by global cursor only
+      - Sequence preload follows the last interacted Group
+      - Sequence display is parallel rather than slot-serial
+      - Sequence cache is retained by URL and reused instead of consumed like Random ReadyPool
+      - Frame polling is avoided for Sequence; Manager refreshes Groups when cached URLs become available
+    verification:
+      dotnet_build: passed
+      diff_check: passed
+      warnings:
+        - existing System.Threading.Tasks.Extensions version conflict in UdonSharp.Editor.csproj
+        - existing QuickBrown LuraSwitch2 SwitchBase unused field warning
+    pending_runtime_tests:
+      - UdonSharp compile in Unity after serialized Udon asset refresh
+      - SequenceForward and SequenceReverse rapid-click behavior in ClientSim or VRC
+      - mixed Landscape and Portrait Group page behavior
+      - multi-Group focus switching in Preload mode
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/

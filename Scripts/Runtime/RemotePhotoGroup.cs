@@ -192,6 +192,11 @@ namespace RemotePhotoSystem
             ApplyCurrentSelection();
         }
 
+        public void RefreshCurrentSelectionFromManager()
+        {
+            ApplyCurrentSelection();
+        }
+
         private bool CanPassTriggerCooldown()
         {
             if (triggerCooldownSeconds <= 0f)
@@ -375,7 +380,7 @@ namespace RemotePhotoSystem
             else
             {
                 bool nextPage = triggerAction == TriggerActionNext;
-                manager.BeginSequencePageSelection(nextPage, landscapeCount, portraitCount);
+                manager.BeginSequencePageSelection(this, nextPage, landscapeCount, portraitCount);
                 if (!FillSequencePageSelectionInTargetOrder())
                 {
                     return false;
@@ -540,15 +545,8 @@ namespace RemotePhotoSystem
             _activeDisplayRevision = selectionRevision;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
-            _activeDisplaySequential = manager == null || manager.configuredPlayMode != RemotePhotoPlayMode.Random;
-            if (_activeDisplaySequential)
-            {
-                ApplyNextSelectionSlotInOrder();
-            }
-            else
-            {
-                ApplySelectionSlotsParallel();
-            }
+            _activeDisplaySequential = false;
+            ApplySelectionSlotsParallel();
         }
 
         public void NotifyFrameDisplayFinished(int slotIndex, int revision, int requestSerial)

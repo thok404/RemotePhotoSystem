@@ -184,6 +184,10 @@ namespace RemotePhotoSystem
                 {
                     NotifyGroupDisplayFinished();
                 }
+                else if (manager != null && manager.IsPreloadEnabled() && manager.configuredPlayMode != RemotePhotoPlayMode.Random)
+                {
+                    TryApplyManagerCacheOrFailure();
+                }
                 else
                 {
                     _pendingGalleryCacheRevision = selectionRevision;
@@ -226,7 +230,15 @@ namespace RemotePhotoSystem
                     _activeRetryCount = 0;
                     LogDownload("Cache hit: " + gameObject.name + " -> " + _activeUrl);
                     ApplyTexture(cachedTexture, _activeFitMode);
-                    manager.ConsumeCachedTexture(url, this);
+                    if (manager.configuredPlayMode == RemotePhotoPlayMode.Random)
+                    {
+                        manager.ConsumeCachedTexture(url, this);
+                    }
+                    else
+                    {
+                        manager.RetainCachedTextureForFrame(url, this);
+                    }
+
                     _displayHandleManager = manager;
                     DisposeDownload(previousDownload);
                     NotifyGroupDisplayFinished();
@@ -243,7 +255,11 @@ namespace RemotePhotoSystem
                 _activeRetryCount = 0;
                 manager.LogDebug("Cache not ready, frame waits for preload queue: " + gameObject.name + " -> " + _activeUrl);
                 manager.WakePreloadQueue();
-                SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+                if (manager.configuredPlayMode == RemotePhotoPlayMode.Random)
+                {
+                    SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+                }
+
                 return;
             }
 
@@ -281,6 +297,22 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            if (TryApplyManagerCacheOrFailure())
+            {
+                return;
+            }
+
+            _activeManager.WakePreloadQueue();
+            SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+        }
+
+        private bool TryApplyManagerCacheOrFailure()
+        {
+            if (_activeManager == null || !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
+            {
+                return false;
+            }
+
             Texture2D cachedTexture = _activeManager.GetCachedTextureQuiet(_activeVrcUrl);
             if (cachedTexture != null)
             {
@@ -289,11 +321,19 @@ namespace RemotePhotoSystem
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
                 ApplyTexture(cachedTexture, _activeFitMode);
-                _activeManager.ConsumeCachedTexture(_activeVrcUrl, this);
+                if (_activeManager.configuredPlayMode == RemotePhotoPlayMode.Random)
+                {
+                    _activeManager.ConsumeCachedTexture(_activeVrcUrl, this);
+                }
+                else
+                {
+                    _activeManager.RetainCachedTextureForFrame(_activeVrcUrl, this);
+                }
+
                 _displayHandleManager = _activeManager;
                 DisposeDownload(previousDownload);
                 NotifyGroupDisplayFinished();
-                return;
+                return true;
             }
 
             if (_activeManager.IsTextureRequestFailed(_activeVrcUrl))
@@ -304,11 +344,10 @@ namespace RemotePhotoSystem
                 ApplyFallback();
                 ReleaseDisplayedManagerDownloadIfFallbackApplied();
                 NotifyGroupDisplayFinished();
-                return;
+                return true;
             }
 
-            _activeManager.WakePreloadQueue();
-            SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+            return false;
         }
 
         public override void OnImageLoadSuccess(IVRCImageDownload result)
