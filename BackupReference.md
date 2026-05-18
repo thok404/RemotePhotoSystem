@@ -5,7 +5,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-05-08
+  current_date_recorded: 2026-05-19
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -42,6 +42,8 @@ codex_project_backup:
         - global play mode
         - loading mode
         - preload cache manager
+        - Random ReadyPool manager
+        - single active Random consume request
         - shared retry settings
         - debug logs
         - managed group creation and ordering
@@ -75,14 +77,18 @@ codex_project_backup:
         - SelectPortraitUrl()
         - BeginSequencePageSelection()
         - CommitSequencePageSelection()
+        - BeginRandomConsume()
+        - RefreshPreloadPredictions()
         - NotifySelectionStateChanged()
 
     RemotePhotoGroup:
       responsibilities:
-        - button permission
+        - button trigger request entry
         - network cooldown
         - target frame list
         - synced current URL payload
+        - synced load slot order
+        - synced Random per-slot request ids
       manager_link:
         field: manager
         visibility: hidden
@@ -94,11 +100,12 @@ codex_project_backup:
         - TriggerNext()
       important_fields:
         - manager
-        - permissionMode
         - triggerCooldownSeconds
         - nextAllowedTriggerServerTime
         - targets
         - syncedUrls
+        - syncedLoadOrderSlots
+        - syncedSlotRequestIds
         - selectionRevision
       sequence_page_behavior:
         - Random works only when Manager play mode is Random
@@ -107,6 +114,10 @@ codex_project_backup:
         - landscape frames advance only the landscape cursor
         - portrait frames advance only the portrait cursor
         - failed sequence URLs remain in the gallery and can be retried when revisited
+      trigger_authority:
+        - all players may press trigger buttons
+        - non-Master clients only broadcast trigger requests
+        - current Master is the only client that checks cooldown, selects URLs, advances cursors, writes synced state, and serializes
 
     RemotePhotoFrame:
       responsibilities:
@@ -134,7 +145,14 @@ codex_project_backup:
       main_methods:
         - LoadPhoto()
         - LoadPhotoFromManager()
+        - LoadPhotoFromManagerSlot()
+        - ApplyManagerTexture()
         - ClearPhoto()
+      random_preload_rule:
+        - Frame does not select Random URLs
+        - Frame does not insert preload priority requests
+        - Frame displays Manager-provided Texture when consumed from ReadyPool
+        - Frame keeps the current image while waiting or when fallback is disabled
       aspect_rules:
         - Manual uses manualAspectRatio and hides axisMode
         - Auto uses mesh bounds and always discards the shortest dimension
@@ -230,27 +248,65 @@ codex_project_backup:
     shared_retry_fields:
       - retryAttempts
       - retryDelaySeconds
-    fixed_next_download_interval_seconds: 5
+    fixed_next_download_interval_seconds: 5.1
     retry_delay_rule:
-      - retryDelaySeconds is not forced to include the 5 second preload queue interval
-      - the 5 second interval is only for moving to the next preload queue image
+      - retryDelaySeconds is not forced to include the 5.1 second preload queue interval
+      - the 5.1 second interval is only for moving to the next preload queue image
     total_cache_capacity: landscape + portrait
-    known_risk: cache eviction is total capacity, not strictly separated by orientation
-    preload_order_rule: managedGroups order, then each group's targets order
-    random_selection_rule: random mode can use synced preload order first, then falls back to normal gallery random when cache order is insufficient
+    random_ready_pool:
+      enabled_when:
+        - loadingMode == Preload
+        - configuredPlayMode == Random
+      design:
+        - no Group Page Queue
+        - no Future Page queue
+        - no page cache window
+        - Manager continuously downloads random images into a global ReadyPool split by orientation
+        - ReadyPool stores URL, Texture2D, download handle, and access tick
+        - ReadyPool capacity counts only unassigned preloaded images
+        - images already assigned to Frames do not consume ReadyPool capacity
+        - active request may keep downloading even if ReadyPool capacity is full
+      active_consume_request:
+        - only one active Random consume request may exist globally
+        - new Random trigger is rejected while active request is incomplete
+        - request snapshots valid Group target slot order at trigger time
+        - slots are filled strictly in Group.targets order
+        - each ReadyPool image is consumed by one Frame only
+        - if ReadyPool is insufficient, already available slots display immediately and remaining slots keep their old image until future downloads fill them
+      download_priority:
+        - active Random consume request missing orientation
+        - current synced URLs not yet cached or displayed
+        - ReadyPool background refill based on managedGroups and targets direction order
+      refill_rule:
+        - background Random refill follows managedGroups order and each group's targets orientation
+        - it no longer fills all landscape cache before portrait cache
+      failure_rule:
+        - failed random preload URL is marked failed
+        - failed random preload does not advance an active consume slot
+        - Manager continues downloading another random URL
     sequence_failure_rule: failed sequence URLs remain in the gallery and can be retried when revisited
 
   networking_design:
     current_photo_authority: RemotePhotoGroup.syncedUrls
-    manager_cursor_sync: Group trigger calls RemotePhotoManager.NotifySelectionStateChanged()
+    synced_slot_order: RemotePhotoGroup.syncedLoadOrderSlots
+    random_slot_request_ids: RemotePhotoGroup.syncedSlotRequestIds
+    manager_cursor_sync: Sequence Group trigger calls RemotePhotoManager.NotifySelectionStateChanged()
+    random_trigger_sync:
+      - TriggerRandom is a request entry
+      - non-Master sends _RequestTriggerRandom to all clients
+      - only Networking.IsMaster executes the request
+      - Master creates ActiveConsumeRequest through RemotePhotoManager.BeginRandomConsume()
+      - Master writes each filled Random slot URL and syncedSlotRequestIds incrementally
+      - Random slot updates may serialize per slot while the active request is being fulfilled
     cooldown_sync:
       field: RemotePhotoGroup.nextAllowedTriggerServerTime
       time_source: Networking.GetServerTimeInSeconds()
-      behavior: cooldown is checked before ownership takeover
+      behavior: cooldown is checked only by Master before accepting a trigger request
     sync_preference:
       - clients show fallback on download failure
       - clients must not locally choose replacement URLs
-      - owner next sync is the next chance to show a different URL
+      - Master next sync is the next chance to show a different URL
+      - Texture is never network-synced, only URL and slot metadata are synced
 
   load_once_on_start:
     owner: RemotePhotoManager
@@ -264,6 +320,7 @@ codex_project_backup:
       - when enabled, Manager triggers every managed group once after configured delay
       - Random play mode calls RemotePhotoGroup.TriggerRandom()
       - SequenceForward and SequenceReverse call RemotePhotoGroup.TriggerNext() so the first page loads
+      - only Master executes startup loading requests
 
   non_preload_design:
     enabled_by: RemotePhotoManager.loadingMode == NonPreload
@@ -274,6 +331,7 @@ codex_project_backup:
       - button trigger immediately selects URL
       - group syncs URL
       - frame directly downloads image
+      - NonPreload Random still selects URLs at trigger time because it has no ReadyPool
 
   editor_workflow:
     manager_creation_menu: GameObject/Remote Photo System/Create Manager
@@ -375,6 +433,10 @@ codex_project_backup:
     - mixed landscape/portrait targets
     - trigger cooldown behavior
     - fallback behavior for bad URL, oversized image, SSL issue, denied domain
+    - Random + Preload ReadyPool refill after multiple rounds
+    - Random + Preload active request rejection while incomplete
+    - Random + Preload mixed landscape/portrait ReadyPool balance
+    - Random + Preload multi-group trigger behavior under Master arbitration
     - Box projection front/back consistency
     - Horizontal Flip behavior
     - ReferenceBox axis mode behavior
@@ -384,6 +446,8 @@ codex_project_backup:
     - MaximumDimensionExceeded is non-retryable
     - SSL certificate chain can fail in VRCImageDownloader even if browser works
     - preload mode remains more complex than non-preload mode
+    - Random + Preload responsiveness is bounded by VRChat image download interval and image source reliability
+    - if ReadyPool does not contain enough images for a requested group, only available slots change immediately
     - if preload release stability is poor, keep NonPreload as stable path
 
   external_references:

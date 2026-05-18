@@ -44,6 +44,12 @@ namespace RemotePhotoSystem
         private int _activeRetryCount;
         private int _activeSelectionRevision = NoSelectionRevision;
         private RemotePhotoManager _activeManager;
+        private RemotePhotoGroup _activeGroup;
+        private int _activeSlotIndex = -1;
+        private int _activeRequestSerial;
+        private int _pendingGalleryCacheRevision = NoSelectionRevision;
+        private int _pendingGalleryCacheSerial;
+        private RemotePhotoManager _displayHandleManager;
         private float _resolvedFrameAspectRatio = 1.7777778f;
         private int _cachedShortestAxis = 2;
         private Vector3 _cachedBoundsCenter = Vector3.zero;
@@ -51,7 +57,7 @@ namespace RemotePhotoSystem
         private const int DefaultDownloadRetryAttempts = 3;
         private const int NoSelectionRevision = -1;
         private const float DefaultDownloadRetryDelaySeconds = 2f;
-        private const float GalleryCachePollDelaySeconds = 0.25f;
+        private const float GalleryCachePollDelaySeconds = 1f;
         private const string RemotePhotoBackgroundColorPropertyName = "_RemotePhotoBackgroundColor";
         private const string RemotePhotoFitModePropertyName = "_RemotePhotoFitMode";
         private const string PhotoRotationDegreesPropertyName = "_PhotoRotationDegrees";
@@ -91,6 +97,9 @@ namespace RemotePhotoSystem
         public void LoadPhoto(VRCUrl url)
         {
             _activeManager = null;
+            _activeGroup = null;
+            _activeSlotIndex = -1;
+            _activeRequestSerial = 0;
             _activeSelectionRevision = NoSelectionRevision;
 
             if (_runtimeMaterial == null)
@@ -106,13 +115,12 @@ namespace RemotePhotoSystem
                 _pendingGalleryCacheUrl = string.Empty;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
-                CancelCurrentDownload();
                 ApplyFallback();
+                ReleaseDisplayedManagerDownloadIfFallbackApplied();
                 return;
             }
 
             EnsureDownloader();
-            CancelCurrentDownload();
 
             _activeVrcUrl = url;
             _activeUrl = url.Get();
@@ -126,7 +134,42 @@ namespace RemotePhotoSystem
 
         public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager, int selectionRevision)
         {
+            LoadPhotoFromManagerSlot(url, manager, selectionRevision, null, -1, 0);
+        }
+
+        public void ApplyManagerTexture(Texture texture, RemotePhotoManager manager)
+        {
             _activeManager = manager;
+            _activeGroup = null;
+            _activeSlotIndex = -1;
+            _activeRequestSerial = 0;
+            _pendingRetryUrl = string.Empty;
+            _pendingGalleryCacheUrl = string.Empty;
+            _pendingGalleryCacheRevision = NoSelectionRevision;
+            _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
+
+            if (_runtimeMaterial == null)
+            {
+                InitializeMaterial();
+            }
+
+            if (texture == null)
+            {
+                return;
+            }
+
+            IVRCImageDownload previousDownload = _currentDownload;
+            ApplyTexture(texture, _activeFitMode);
+            _displayHandleManager = manager;
+            DisposeDownload(previousDownload);
+        }
+
+        public void LoadPhotoFromManagerSlot(VRCUrl url, RemotePhotoManager manager, int selectionRevision, RemotePhotoGroup group, int slotIndex, int requestSerial)
+        {
+            _activeManager = manager;
+            _activeGroup = group;
+            _activeSlotIndex = slotIndex;
+            _activeRequestSerial = requestSerial;
 
             if (_runtimeMaterial == null)
             {
@@ -137,6 +180,17 @@ namespace RemotePhotoSystem
                 selectionRevision == _activeSelectionRevision &&
                 url.Get() == _activeUrl)
             {
+                if (string.IsNullOrEmpty(_pendingGalleryCacheUrl))
+                {
+                    NotifyGroupDisplayFinished();
+                }
+                else
+                {
+                    _pendingGalleryCacheRevision = selectionRevision;
+                    _pendingGalleryCacheSerial = requestSerial;
+                    SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+                }
+
                 return;
             }
 
@@ -148,10 +202,12 @@ namespace RemotePhotoSystem
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
                 _pendingGalleryCacheUrl = string.Empty;
+                _pendingGalleryCacheRevision = NoSelectionRevision;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
-                CancelCurrentDownload();
                 ApplyFallback();
+                ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                NotifyGroupDisplayFinished();
                 return;
             }
 
@@ -160,16 +216,20 @@ namespace RemotePhotoSystem
                 Texture2D cachedTexture = manager.GetCachedTexture(url);
                 if (cachedTexture != null)
                 {
+                    IVRCImageDownload previousDownload = _currentDownload;
                     _activeVrcUrl = url;
                     _activeUrl = url.Get();
                     _pendingRetryUrl = string.Empty;
                     _pendingGalleryCacheUrl = string.Empty;
+                    _pendingGalleryCacheRevision = NoSelectionRevision;
                     _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                     _activeRetryCount = 0;
-                    CancelCurrentDownload();
                     LogDownload("Cache hit: " + gameObject.name + " -> " + _activeUrl);
                     ApplyTexture(cachedTexture, _activeFitMode);
-                    manager.ConsumeCachedTexture(url);
+                    manager.ConsumeCachedTexture(url, this);
+                    _displayHandleManager = manager;
+                    DisposeDownload(previousDownload);
+                    NotifyGroupDisplayFinished();
                     return;
                 }
 
@@ -177,11 +237,11 @@ namespace RemotePhotoSystem
                 _activeUrl = url.Get();
                 _pendingRetryUrl = string.Empty;
                 _pendingGalleryCacheUrl = _activeUrl;
+                _pendingGalleryCacheRevision = selectionRevision;
+                _pendingGalleryCacheSerial = requestSerial;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
-                CancelCurrentDownload();
                 manager.LogDebug("Cache not ready, frame waits for preload queue: " + gameObject.name + " -> " + _activeUrl);
-                manager.RequestPreloadPriority(url);
                 manager.WakePreloadQueue();
                 SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
                 return;
@@ -198,17 +258,24 @@ namespace RemotePhotoSystem
             _activeUrl = string.Empty;
             _pendingRetryUrl = string.Empty;
             _pendingGalleryCacheUrl = string.Empty;
+            _pendingGalleryCacheRevision = NoSelectionRevision;
             _activeManager = null;
+            _activeGroup = null;
+            _activeSlotIndex = -1;
+            _activeRequestSerial = 0;
             _activeSelectionRevision = NoSelectionRevision;
             _activeRetryCount = 0;
             CancelCurrentDownload();
             ApplyFallback();
+            ReleaseDisplayedManagerDownloadIfFallbackApplied();
         }
 
         public void _ApplyGalleryCacheWhenReady()
         {
             if (_activeManager == null ||
                 _pendingGalleryCacheUrl != _activeUrl ||
+                _pendingGalleryCacheRevision != _activeSelectionRevision ||
+                _pendingGalleryCacheSerial != _activeRequestSerial ||
                 !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
             {
                 return;
@@ -217,15 +284,30 @@ namespace RemotePhotoSystem
             Texture2D cachedTexture = _activeManager.GetCachedTextureQuiet(_activeVrcUrl);
             if (cachedTexture != null)
             {
+                IVRCImageDownload previousDownload = _currentDownload;
                 LogDownload("Manager queue image ready: " + gameObject.name + " -> " + _activeUrl);
                 _pendingGalleryCacheUrl = string.Empty;
+                _pendingGalleryCacheRevision = NoSelectionRevision;
                 ApplyTexture(cachedTexture, _activeFitMode);
-                _activeManager.ConsumeCachedTexture(_activeVrcUrl);
+                _activeManager.ConsumeCachedTexture(_activeVrcUrl, this);
+                _displayHandleManager = _activeManager;
+                DisposeDownload(previousDownload);
+                NotifyGroupDisplayFinished();
+                return;
+            }
+
+            if (_activeManager.IsTextureRequestFailed(_activeVrcUrl))
+            {
+                LogDownload("Manager queue image failed: " + gameObject.name + " -> " + _activeUrl);
+                _pendingGalleryCacheUrl = string.Empty;
+                _pendingGalleryCacheRevision = NoSelectionRevision;
+                ApplyFallback();
+                ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                NotifyGroupDisplayFinished();
                 return;
             }
 
             _activeManager.WakePreloadQueue();
-            _activeManager.RequestPreloadPriority(_activeVrcUrl);
             SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
         }
 
@@ -240,13 +322,12 @@ namespace RemotePhotoSystem
             _activeRetryCount = 0;
             _pendingRetryUrl = string.Empty;
             _pendingGalleryCacheUrl = string.Empty;
+            _pendingGalleryCacheRevision = NoSelectionRevision;
             LogDownload("Download success: " + gameObject.name + " -> " + _activeUrl);
-            if (_activeManager != null)
-            {
-                _activeManager.StoreCachedTexture(result.Url, result.Result);
-            }
 
             ApplyTexture(result.Result, _activeFitMode);
+            ReleaseDisplayedManagerDownload();
+            NotifyGroupDisplayFinished();
         }
 
         public override void OnImageLoadError(IVRCImageDownload result)
@@ -263,6 +344,8 @@ namespace RemotePhotoSystem
                 _pendingRetryUrl = string.Empty;
                 LogDownload("Download non-retryable error, applying fallback: " + gameObject.name + " -> " + _activeUrl);
                 ApplyFallback();
+                ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                NotifyGroupDisplayFinished();
                 return;
             }
 
@@ -280,6 +363,8 @@ namespace RemotePhotoSystem
             _pendingRetryUrl = string.Empty;
             LogDownload("Download gave up, applying fallback: " + gameObject.name + " -> " + _activeUrl);
             ApplyFallback();
+            ReleaseDisplayedManagerDownloadIfFallbackApplied();
+            NotifyGroupDisplayFinished();
         }
 
         public void _RetryActiveDownload()
@@ -297,6 +382,7 @@ namespace RemotePhotoSystem
 
         public void OnDestroy()
         {
+            ReleaseDisplayedManagerDownload();
             CancelCurrentDownload();
 
             if (_downloader != null)
@@ -366,6 +452,46 @@ namespace RemotePhotoSystem
             {
                 _currentDownload.Dispose();
                 _currentDownload = null;
+            }
+        }
+
+        private void DisposeDownload(IVRCImageDownload download)
+        {
+            if (download == null)
+            {
+                return;
+            }
+
+            if (download == _currentDownload)
+            {
+                _currentDownload = null;
+            }
+
+            download.Dispose();
+        }
+
+        private void NotifyGroupDisplayFinished()
+        {
+            if (_activeGroup != null)
+            {
+                _activeGroup.NotifyFrameDisplayFinished(_activeSlotIndex, _activeSelectionRevision, _activeRequestSerial);
+            }
+        }
+
+        private void ReleaseDisplayedManagerDownload()
+        {
+            if (_displayHandleManager != null)
+            {
+                _displayHandleManager.ReleaseDisplayedDownload(this);
+                _displayHandleManager = null;
+            }
+        }
+
+        private void ReleaseDisplayedManagerDownloadIfFallbackApplied()
+        {
+            if (useFallbackTexture && fallbackTexture != null)
+            {
+                ReleaseDisplayedManagerDownload();
             }
         }
 
