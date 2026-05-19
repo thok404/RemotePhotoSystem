@@ -35,6 +35,7 @@ namespace RemotePhotoSystem
         private MeshFilter _meshFilter;
         private VRCImageDownloader _downloader;
         private IVRCImageDownload _currentDownload;
+        private IVRCImageDownload _displayedDirectDownload;
         private TextureInfo _textureInfo;
         private VRCUrl _activeVrcUrl;
         private string _activeUrl = string.Empty;
@@ -47,6 +48,12 @@ namespace RemotePhotoSystem
         private RemotePhotoGroup _activeGroup;
         private int _activeSlotIndex = -1;
         private int _activeRequestSerial;
+        private int _currentDownloadSelectionRevision = NoSelectionRevision;
+        private RemotePhotoGroup _currentDownloadGroup;
+        private int _currentDownloadSlotIndex = -1;
+        private int _currentDownloadRequestSerial;
+        private int _pendingRetryRevision = NoSelectionRevision;
+        private int _pendingRetrySerial;
         private int _pendingGalleryCacheRevision = NoSelectionRevision;
         private int _pendingGalleryCacheSerial;
         private RemotePhotoManager _displayHandleManager;
@@ -74,6 +81,7 @@ namespace RemotePhotoSystem
         private const string RemotePhotoUvScaleYPropertyName = "_RemotePhotoUvScaleY";
         private const string RemotePhotoUvOffsetXPropertyName = "_RemotePhotoUvOffsetX";
         private const string RemotePhotoUvOffsetYPropertyName = "_RemotePhotoUvOffsetY";
+        private const string RemotePhotoPreloadTexturePropertyName = "_RemotePhotoPreloadTex";
 
         public void Start()
         {
@@ -96,40 +104,7 @@ namespace RemotePhotoSystem
 
         public void LoadPhoto(VRCUrl url)
         {
-            _activeManager = null;
-            _activeGroup = null;
-            _activeSlotIndex = -1;
-            _activeRequestSerial = 0;
-            _activeSelectionRevision = NoSelectionRevision;
-
-            if (_runtimeMaterial == null)
-            {
-                InitializeMaterial();
-            }
-
-            if (!RemotePhotoUrlUtility.IsValidVrcUrl(url))
-            {
-                _activeVrcUrl = null;
-                _activeUrl = string.Empty;
-                _pendingRetryUrl = string.Empty;
-                _pendingGalleryCacheUrl = string.Empty;
-                _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
-                _activeRetryCount = 0;
-                ApplyFallback();
-                ReleaseDisplayedManagerDownloadIfFallbackApplied();
-                return;
-            }
-
-            EnsureDownloader();
-
-            _activeVrcUrl = url;
-            _activeUrl = url.Get();
-            _pendingRetryUrl = string.Empty;
-            _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
-            _activeRetryCount = 0;
-
-            LogDownload("Download start: " + gameObject.name + " -> " + _activeUrl);
-            StartActiveDownload();
+            BeginDemandLoad(url, null, NoSelectionRevision, null, -1, 0);
         }
 
         public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager, int selectionRevision)
@@ -144,6 +119,8 @@ namespace RemotePhotoSystem
             _activeSlotIndex = -1;
             _activeRequestSerial = 0;
             _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
             _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
@@ -158,10 +135,12 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            IVRCImageDownload previousDownload = _currentDownload;
+            CancelCurrentDownload();
+            IVRCImageDownload previousDirectDownload = _displayedDirectDownload;
+            _displayedDirectDownload = null;
             ApplyTexture(texture, _activeFitMode);
             _displayHandleManager = manager;
-            DisposeDownload(previousDownload);
+            DisposeDownload(previousDirectDownload);
         }
 
         public void LoadPhotoFromManagerSlot(VRCUrl url, RemotePhotoManager manager, int selectionRevision, RemotePhotoGroup group, int slotIndex, int requestSerial)
@@ -180,6 +159,11 @@ namespace RemotePhotoSystem
                 selectionRevision == _activeSelectionRevision &&
                 url.Get() == _activeUrl)
             {
+                if (manager != null && !manager.IsPreloadEnabled() && _currentDownload != null)
+                {
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(_pendingGalleryCacheUrl))
                 {
                     NotifyGroupDisplayFinished();
@@ -205,12 +189,16 @@ namespace RemotePhotoSystem
                 _activeVrcUrl = null;
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
+                _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySerial = 0;
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
+                CancelCurrentDownload();
                 ApplyFallback();
                 ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                ReleaseDisplayedDirectDownloadIfFallbackApplied();
                 NotifyGroupDisplayFinished();
                 return;
             }
@@ -220,10 +208,14 @@ namespace RemotePhotoSystem
                 Texture2D cachedTexture = manager.GetCachedTexture(url);
                 if (cachedTexture != null)
                 {
-                    IVRCImageDownload previousDownload = _currentDownload;
+                    CancelCurrentDownload();
+                    IVRCImageDownload previousDirectDownload = _displayedDirectDownload;
+                    _displayedDirectDownload = null;
                     _activeVrcUrl = url;
                     _activeUrl = url.Get();
                     _pendingRetryUrl = string.Empty;
+                    _pendingRetryRevision = NoSelectionRevision;
+                    _pendingRetrySerial = 0;
                     _pendingGalleryCacheUrl = string.Empty;
                     _pendingGalleryCacheRevision = NoSelectionRevision;
                     _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
@@ -240,7 +232,7 @@ namespace RemotePhotoSystem
                     }
 
                     _displayHandleManager = manager;
-                    DisposeDownload(previousDownload);
+                    DisposeDownload(previousDirectDownload);
                     NotifyGroupDisplayFinished();
                     return;
                 }
@@ -248,6 +240,8 @@ namespace RemotePhotoSystem
                 _activeVrcUrl = url;
                 _activeUrl = url.Get();
                 _pendingRetryUrl = string.Empty;
+                _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySerial = 0;
                 _pendingGalleryCacheUrl = _activeUrl;
                 _pendingGalleryCacheRevision = selectionRevision;
                 _pendingGalleryCacheSerial = requestSerial;
@@ -263,9 +257,7 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            LoadPhoto(url);
-            _activeManager = manager;
-            _activeSelectionRevision = selectionRevision;
+            BeginDemandLoad(url, manager, selectionRevision, group, slotIndex, requestSerial);
         }
 
         public void ClearPhoto()
@@ -273,6 +265,8 @@ namespace RemotePhotoSystem
             _activeVrcUrl = null;
             _activeUrl = string.Empty;
             _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
             _activeManager = null;
@@ -284,6 +278,7 @@ namespace RemotePhotoSystem
             CancelCurrentDownload();
             ApplyFallback();
             ReleaseDisplayedManagerDownloadIfFallbackApplied();
+            ReleaseDisplayedDirectDownloadIfFallbackApplied();
         }
 
         public void _ApplyGalleryCacheWhenReady()
@@ -316,7 +311,9 @@ namespace RemotePhotoSystem
             Texture2D cachedTexture = _activeManager.GetCachedTextureQuiet(_activeVrcUrl);
             if (cachedTexture != null)
             {
-                IVRCImageDownload previousDownload = _currentDownload;
+                CancelCurrentDownload();
+                IVRCImageDownload previousDirectDownload = _displayedDirectDownload;
+                _displayedDirectDownload = null;
                 LogDownload("Manager queue image ready: " + gameObject.name + " -> " + _activeUrl);
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
@@ -331,7 +328,7 @@ namespace RemotePhotoSystem
                 }
 
                 _displayHandleManager = _activeManager;
-                DisposeDownload(previousDownload);
+                DisposeDownload(previousDirectDownload);
                 NotifyGroupDisplayFinished();
                 return true;
             }
@@ -343,6 +340,7 @@ namespace RemotePhotoSystem
                 _pendingGalleryCacheRevision = NoSelectionRevision;
                 ApplyFallback();
                 ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                ReleaseDisplayedDirectDownloadIfFallbackApplied();
                 NotifyGroupDisplayFinished();
                 return true;
             }
@@ -352,38 +350,46 @@ namespace RemotePhotoSystem
 
         public override void OnImageLoadSuccess(IVRCImageDownload result)
         {
-            if (result == null || result.Result == null || result.Url == null || result.Url.Get() != _activeUrl)
+            if (!IsCurrentDownloadResult(result) || result.Result == null)
             {
                 return;
             }
 
-            _currentDownload = result;
+            IVRCImageDownload previousDirectDownload = _displayedDirectDownload;
+            _displayedDirectDownload = result;
+            _currentDownload = null;
             _activeRetryCount = 0;
             _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
-            LogDownload("Download success: " + gameObject.name + " -> " + _activeUrl);
+            LogDownload("Download success: " + gameObject.name + " Revision=" + _activeSelectionRevision + " Slot=" + _activeSlotIndex + " Serial=" + _activeRequestSerial + " -> " + _activeUrl);
 
             ApplyTexture(result.Result, _activeFitMode);
             ReleaseDisplayedManagerDownload();
+            DisposeDownload(previousDirectDownload);
             NotifyGroupDisplayFinished();
         }
 
         public override void OnImageLoadError(IVRCImageDownload result)
         {
-            if (result != null && result.Url != null && result.Url.Get() != _activeUrl)
+            if (!IsCurrentDownloadResult(result))
             {
                 return;
             }
 
             CancelCurrentDownload();
-            LogDownload("Download failed: " + gameObject.name + " -> " + _activeUrl + GetImageDownloadErrorDetails(result));
+            LogDownload("Download failed: " + gameObject.name + " Revision=" + _activeSelectionRevision + " Slot=" + _activeSlotIndex + " Serial=" + _activeRequestSerial + " -> " + _activeUrl + GetImageDownloadErrorDetails(result));
             if (IsNonRetryableImageError(result))
             {
                 _pendingRetryUrl = string.Empty;
+                _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySerial = 0;
                 LogDownload("Download non-retryable error, applying fallback: " + gameObject.name + " -> " + _activeUrl);
                 ApplyFallback();
                 ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                ReleaseDisplayedDirectDownloadIfFallbackApplied();
                 NotifyGroupDisplayFinished();
                 return;
             }
@@ -393,6 +399,8 @@ namespace RemotePhotoSystem
             {
                 _activeRetryCount++;
                 _pendingRetryUrl = _activeUrl;
+                _pendingRetryRevision = _activeSelectionRevision;
+                _pendingRetrySerial = _activeRequestSerial;
                 float retryDelay = GetImageRetryDelaySeconds();
                 LogDownload("Download retry " + _activeRetryCount + "/" + maxRetryAttempts + " in " + retryDelay + "s: " + gameObject.name + " -> " + _activeUrl);
                 SendCustomEventDelayedSeconds(nameof(_RetryActiveDownload), retryDelay);
@@ -400,21 +408,29 @@ namespace RemotePhotoSystem
             }
 
             _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
             LogDownload("Download gave up, applying fallback: " + gameObject.name + " -> " + _activeUrl);
             ApplyFallback();
             ReleaseDisplayedManagerDownloadIfFallbackApplied();
+            ReleaseDisplayedDirectDownloadIfFallbackApplied();
             NotifyGroupDisplayFinished();
         }
 
         public void _RetryActiveDownload()
         {
-            if (_pendingRetryUrl != _activeUrl || !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
+            if (_pendingRetryUrl != _activeUrl ||
+                _pendingRetryRevision != _activeSelectionRevision ||
+                _pendingRetrySerial != _activeRequestSerial ||
+                !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
             {
                 LogDownload("Download retry skipped because the active URL changed: " + gameObject.name);
                 return;
             }
 
             _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
             LogDownload("Download retry start: " + gameObject.name + " -> " + _activeUrl);
             StartActiveDownload();
         }
@@ -423,6 +439,7 @@ namespace RemotePhotoSystem
         {
             ReleaseDisplayedManagerDownload();
             CancelCurrentDownload();
+            ReleaseDisplayedDirectDownload();
 
             if (_downloader != null)
             {
@@ -492,6 +509,11 @@ namespace RemotePhotoSystem
                 _currentDownload.Dispose();
                 _currentDownload = null;
             }
+
+            _currentDownloadSelectionRevision = NoSelectionRevision;
+            _currentDownloadGroup = null;
+            _currentDownloadSlotIndex = -1;
+            _currentDownloadRequestSerial = 0;
         }
 
         private void DisposeDownload(IVRCImageDownload download)
@@ -509,12 +531,42 @@ namespace RemotePhotoSystem
             download.Dispose();
         }
 
+        private void ReleaseDisplayedDirectDownload()
+        {
+            if (_displayedDirectDownload != null)
+            {
+                _displayedDirectDownload.Dispose();
+                _displayedDirectDownload = null;
+            }
+        }
+
         private void NotifyGroupDisplayFinished()
         {
             if (_activeGroup != null)
             {
                 _activeGroup.NotifyFrameDisplayFinished(_activeSlotIndex, _activeSelectionRevision, _activeRequestSerial);
             }
+        }
+
+        private bool IsCurrentDownloadResult(IVRCImageDownload result)
+        {
+            if (result == null ||
+                result != _currentDownload ||
+                result.Url == null ||
+                result.Url.Get() != _activeUrl)
+            {
+                return false;
+            }
+
+            if (_currentDownloadSelectionRevision != _activeSelectionRevision ||
+                _currentDownloadGroup != _activeGroup ||
+                _currentDownloadSlotIndex != _activeSlotIndex ||
+                _currentDownloadRequestSerial != _activeRequestSerial)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void ReleaseDisplayedManagerDownload()
@@ -534,6 +586,14 @@ namespace RemotePhotoSystem
             }
         }
 
+        private void ReleaseDisplayedDirectDownloadIfFallbackApplied()
+        {
+            if (useFallbackTexture && fallbackTexture != null)
+            {
+                ReleaseDisplayedDirectDownload();
+            }
+        }
+
         private void StartActiveDownload()
         {
             if (!RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
@@ -541,15 +601,69 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            CancelCurrentDownload();
+
             _textureInfo = new TextureInfo();
             _textureInfo.GenerateMipMaps = false;
-            _textureInfo.MaterialProperty = texturePropertyName;
+            _textureInfo.MaterialProperty = RemotePhotoPreloadTexturePropertyName;
             _textureInfo.WrapModeU = _activeFitMode == RemotePhotoFitModeUtility.ToInt(RemotePhotoFitMode.Tile)
                 ? TextureWrapMode.Repeat
                 : TextureWrapMode.Clamp;
             _textureInfo.WrapModeV = _textureInfo.WrapModeU;
 
+            _currentDownloadSelectionRevision = _activeSelectionRevision;
+            _currentDownloadGroup = _activeGroup;
+            _currentDownloadSlotIndex = _activeSlotIndex;
+            _currentDownloadRequestSerial = _activeRequestSerial;
             _currentDownload = _downloader.DownloadImage(_activeVrcUrl, _runtimeMaterial, (IUdonEventReceiver)this, _textureInfo);
+        }
+
+        private void BeginDemandLoad(VRCUrl url, RemotePhotoManager manager, int selectionRevision, RemotePhotoGroup group, int slotIndex, int requestSerial)
+        {
+            _activeManager = manager;
+            _activeGroup = group;
+            _activeSlotIndex = slotIndex;
+            _activeRequestSerial = requestSerial;
+            _activeSelectionRevision = selectionRevision;
+
+            if (_runtimeMaterial == null)
+            {
+                InitializeMaterial();
+            }
+
+            if (!RemotePhotoUrlUtility.IsValidVrcUrl(url))
+            {
+                CancelCurrentDownload();
+                _activeVrcUrl = null;
+                _activeUrl = string.Empty;
+                _pendingRetryUrl = string.Empty;
+                _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySerial = 0;
+                _pendingGalleryCacheUrl = string.Empty;
+                _pendingGalleryCacheRevision = NoSelectionRevision;
+                _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
+                _activeRetryCount = 0;
+                ApplyFallback();
+                ReleaseDisplayedManagerDownloadIfFallbackApplied();
+                ReleaseDisplayedDirectDownloadIfFallbackApplied();
+                NotifyGroupDisplayFinished();
+                return;
+            }
+
+            EnsureDownloader();
+
+            _activeVrcUrl = url;
+            _activeUrl = url.Get();
+            _pendingRetryUrl = string.Empty;
+            _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySerial = 0;
+            _pendingGalleryCacheUrl = string.Empty;
+            _pendingGalleryCacheRevision = NoSelectionRevision;
+            _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
+            _activeRetryCount = 0;
+
+            LogDownload("Download start: " + gameObject.name + " Revision=" + _activeSelectionRevision + " Slot=" + _activeSlotIndex + " Serial=" + _activeRequestSerial + " -> " + _activeUrl);
+            StartActiveDownload();
         }
 
         private int GetImageRetryAttempts()

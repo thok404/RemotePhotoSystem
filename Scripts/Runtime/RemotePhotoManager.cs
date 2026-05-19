@@ -423,6 +423,38 @@ namespace RemotePhotoSystem
             return count;
         }
 
+        private int GetSyncedSlotForPair(RemotePhotoGroup group, int pairIndex)
+        {
+            if (group == null || pairIndex < 0)
+            {
+                return -1;
+            }
+
+            int[] slots = group.syncedLoadOrderSlots;
+            if (slots != null && pairIndex < slots.Length && slots[pairIndex] >= 0)
+            {
+                return slots[pairIndex];
+            }
+
+            return pairIndex;
+        }
+
+        private RemotePhotoFrame GetSyncedFrameForPair(RemotePhotoGroup group, int pairIndex)
+        {
+            if (group == null || group.targets == null)
+            {
+                return null;
+            }
+
+            int slot = GetSyncedSlotForPair(group, pairIndex);
+            if (slot < 0 || slot >= group.targets.Length)
+            {
+                return null;
+            }
+
+            return group.targets[slot];
+        }
+
         private void TryFulfillActiveRandomRequest()
         {
             if (!_activeRandomRequestActive || _activeRandomGroup == null || _activeRandomSlots == null)
@@ -600,22 +632,21 @@ namespace RemotePhotoSystem
                 }
 
                 RemotePhotoGroup group = managedGroups[groupIndex];
-                RemotePhotoFrame[] targets = group == null ? null : group.targets;
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
-                int targetIndex = 0;
-                while (targets != null && urls != null && targetIndex < targets.Length && targetIndex < urls.Length)
+                int pairIndex = 0;
+                while (urls != null && pairIndex < urls.Length)
                 {
-                    RemotePhotoFrame target = targets[targetIndex];
+                    RemotePhotoFrame target = GetSyncedFrameForPair(group, pairIndex);
                     bool targetLandscape = target != null && target.orientation == RemotePhotoOrientation.Landscape;
                     if (target != null &&
                         targetLandscape == landscape &&
-                        RemotePhotoUrlUtility.IsValidVrcUrl(urls[targetIndex]) &&
-                        !IsDisplayedUrlString(GetSafeUrlString(urls[targetIndex])))
+                        RemotePhotoUrlUtility.IsValidVrcUrl(urls[pairIndex]) &&
+                        !IsDisplayedUrlString(GetSafeUrlString(urls[pairIndex])))
                     {
                         count++;
                     }
 
-                    targetIndex++;
+                    pairIndex++;
                 }
 
                 groupIndex++;
@@ -1753,13 +1784,14 @@ namespace RemotePhotoSystem
                 }
 
                 RemotePhotoGroup group = managedGroups[groupIndex];
-                RemotePhotoFrame[] targets = group == null ? null : group.targets;
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
                 int index = 0;
-                while (targets != null && urls != null && index < targets.Length && index < urls.Length)
+                while (urls != null && index < urls.Length)
                 {
+                    RemotePhotoFrame target = GetSyncedFrameForPair(group, index);
                     VRCUrl url = urls[index];
-                    if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    if (target != null &&
+                        RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
                         !IsDisplayedUrlString(GetSafeUrlString(url)) &&
                         GetCachedTextureQuiet(url) == null)
                     {
@@ -1874,13 +1906,12 @@ namespace RemotePhotoSystem
                 }
 
                 RemotePhotoGroup group = managedGroups[groupIndex];
-                RemotePhotoFrame[] targets = group == null ? null : group.targets;
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
-                int targetIndex = 0;
-                while (targets != null && urls != null && targetIndex < targets.Length && targetIndex < urls.Length && filled < desiredTotal)
+                int pairIndex = 0;
+                while (urls != null && pairIndex < urls.Length && filled < desiredTotal)
                 {
-                    RemotePhotoFrame target = targets[targetIndex];
-                    VRCUrl currentUrl = urls[targetIndex];
+                    RemotePhotoFrame target = GetSyncedFrameForPair(group, pairIndex);
+                    VRCUrl currentUrl = urls[pairIndex];
                     if (target != null &&
                         RemotePhotoUrlUtility.IsValidVrcUrl(currentUrl) &&
                         !IsDisplayedUrlString(GetSafeUrlString(currentUrl)))
@@ -1902,7 +1933,7 @@ namespace RemotePhotoSystem
                         }
                     }
 
-                    targetIndex++;
+                    pairIndex++;
                 }
 
                 groupIndex++;
@@ -2881,14 +2912,14 @@ namespace RemotePhotoSystem
             while (managedGroups != null && groupIndex < managedGroups.Length)
             {
                 RemotePhotoGroup group = managedGroups[groupIndex];
-                RemotePhotoFrame[] targets = group == null ? null : group.targets;
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
                 int index = 0;
-                while (targets != null && urls != null && index < targets.Length && index < urls.Length)
+                while (urls != null && index < urls.Length)
                 {
+                    RemotePhotoFrame target = GetSyncedFrameForPair(group, index);
                     VRCUrl url = urls[index];
                     string urlString = GetSafeUrlString(url);
-                    if (targets[index] != null &&
+                    if (target != null &&
                         RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
                         !IsDisplayedUrlString(urlString))
                     {

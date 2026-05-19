@@ -257,6 +257,23 @@ namespace RemotePhotoSystem
             }
         }
 
+        private void ResetSyncedUrls()
+        {
+            int index = 0;
+            while (syncedUrls != null && index < syncedUrls.Length)
+            {
+                syncedUrls[index] = null;
+                index++;
+            }
+        }
+
+        private void ResetSelectionPairs()
+        {
+            ResetSyncedUrls();
+            ResetSyncedLoadOrder();
+            ResetSyncedSlotRequestIds();
+        }
+
         private void ResetSyncedSlotRequestIds()
         {
             int index = 0;
@@ -267,25 +284,58 @@ namespace RemotePhotoSystem
             }
         }
 
-        private void BuildSyncedLoadOrder()
+        private int FindSelectionPairIndexForSlot(int slotIndex)
         {
-            EnsureSyncedArrays();
-            ResetSyncedLoadOrder();
-
-            int writeIndex = 0;
-            int slotIndex = 0;
-            while (targets != null && syncedUrls != null && slotIndex < targets.Length && slotIndex < syncedUrls.Length)
+            int index = 0;
+            while (syncedLoadOrderSlots != null && index < syncedLoadOrderSlots.Length)
             {
-                if (targets[slotIndex] != null &&
-                    RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slotIndex]) &&
-                    IsSlotCurrentSelection(slotIndex))
+                if (syncedLoadOrderSlots[index] == slotIndex)
                 {
-                    syncedLoadOrderSlots[writeIndex] = slotIndex;
-                    writeIndex++;
+                    return index;
                 }
 
-                slotIndex++;
+                index++;
             }
+
+            return -1;
+        }
+
+        private int FindEmptySelectionPairIndex()
+        {
+            int index = 0;
+            while (syncedLoadOrderSlots != null && index < syncedLoadOrderSlots.Length)
+            {
+                if (syncedLoadOrderSlots[index] < 0)
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        private bool WriteSelectionPair(int pairIndex, int slotIndex, VRCUrl url)
+        {
+            if (syncedUrls == null ||
+                syncedLoadOrderSlots == null ||
+                targets == null ||
+                pairIndex < 0 ||
+                pairIndex >= syncedUrls.Length ||
+                pairIndex >= syncedLoadOrderSlots.Length ||
+                slotIndex < 0 ||
+                slotIndex >= targets.Length ||
+                targets[slotIndex] == null ||
+                !RemotePhotoUrlUtility.IsValidVrcUrl(url))
+            {
+                return false;
+            }
+
+            syncedUrls[pairIndex] = url;
+            syncedLoadOrderSlots[pairIndex] = slotIndex;
+            LogDebug("Selection pair: group=" + gameObject.name + ", revision=" + selectionRevision + ", pair=" + pairIndex + ", slot=" + slotIndex + ", frame=" + targets[slotIndex].gameObject.name + ", url=" + url.Get());
+            return true;
         }
 
         private void RegisterPreloadDownloadMaterial()
@@ -317,8 +367,7 @@ namespace RemotePhotoSystem
             EnsureSyncedArrays();
             selectionRevision++;
             loadOrderRevision = selectionRevision;
-            ResetSyncedLoadOrder();
-            ResetSyncedSlotRequestIds();
+            ResetSelectionPairs();
             _activeDisplayRevision = selectionRevision;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
@@ -336,7 +385,6 @@ namespace RemotePhotoSystem
                 syncedUrls == null ||
                 syncedSlotRequestIds == null ||
                 slotIndex >= targets.Length ||
-                slotIndex >= syncedUrls.Length ||
                 slotIndex >= syncedSlotRequestIds.Length ||
                 targets[slotIndex] == null ||
                 !RemotePhotoUrlUtility.IsValidVrcUrl(url) ||
@@ -345,9 +393,18 @@ namespace RemotePhotoSystem
                 return false;
             }
 
-            syncedUrls[slotIndex] = url;
+            int pairIndex = FindSelectionPairIndexForSlot(slotIndex);
+            if (pairIndex < 0)
+            {
+                pairIndex = FindEmptySelectionPairIndex();
+            }
+
+            if (!WriteSelectionPair(pairIndex, slotIndex, url))
+            {
+                return false;
+            }
+
             syncedSlotRequestIds[slotIndex] = selectionRevision;
-            BuildSyncedLoadOrder();
             loadOrderRevision = selectionRevision;
             targets[slotIndex].ApplyManagerTexture(texture, sourceManager);
             RequestSerialization();
@@ -390,7 +447,6 @@ namespace RemotePhotoSystem
             }
 
             selectionRevision++;
-            BuildSyncedLoadOrder();
             loadOrderRevision = selectionRevision;
             return true;
         }
@@ -440,10 +496,12 @@ namespace RemotePhotoSystem
 
         private bool FillGallerySelectionInTargetOrder(int landscapeCount, int portraitCount)
         {
+            ResetSelectionPairs();
             VRCUrl[] selectedLandscapeUrls = new VRCUrl[landscapeCount];
             VRCUrl[] selectedPortraitUrls = new VRCUrl[portraitCount];
             int selectedLandscapeCount = 0;
             int selectedPortraitCount = 0;
+            int writeIndex = 0;
             int index = 0;
             while (targets != null && index < targets.Length)
             {
@@ -465,7 +523,12 @@ namespace RemotePhotoSystem
 
                     selectedLandscapeUrls[selectedLandscapeCount] = selectedUrl;
                     selectedLandscapeCount++;
-                    syncedUrls[index] = selectedUrl;
+                    if (!WriteSelectionPair(writeIndex, index, selectedUrl))
+                    {
+                        return false;
+                    }
+
+                    writeIndex++;
                 }
                 else
                 {
@@ -478,7 +541,12 @@ namespace RemotePhotoSystem
 
                     selectedPortraitUrls[selectedPortraitCount] = selectedUrl;
                     selectedPortraitCount++;
-                    syncedUrls[index] = selectedUrl;
+                    if (!WriteSelectionPair(writeIndex, index, selectedUrl))
+                    {
+                        return false;
+                    }
+
+                    writeIndex++;
                 }
 
                 index++;
@@ -489,6 +557,8 @@ namespace RemotePhotoSystem
 
         private bool FillSequencePageSelectionInTargetOrder()
         {
+            ResetSelectionPairs();
+            int writeIndex = 0;
             int index = 0;
             while (targets != null && index < targets.Length)
             {
@@ -508,7 +578,12 @@ namespace RemotePhotoSystem
                         return false;
                     }
 
-                    syncedUrls[index] = selectedUrl;
+                    if (!WriteSelectionPair(writeIndex, index, selectedUrl))
+                    {
+                        return false;
+                    }
+
+                    writeIndex++;
                 }
                 else
                 {
@@ -519,7 +594,12 @@ namespace RemotePhotoSystem
                         return false;
                     }
 
-                    syncedUrls[index] = selectedUrl;
+                    if (!WriteSelectionPair(writeIndex, index, selectedUrl))
+                    {
+                        return false;
+                    }
+
+                    writeIndex++;
                 }
 
                 index++;
@@ -545,8 +625,19 @@ namespace RemotePhotoSystem
             _activeDisplayRevision = selectionRevision;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
-            _activeDisplaySequential = false;
+            _activeDisplaySequential = ShouldApplySelectionSequential();
+            if (_activeDisplaySequential)
+            {
+                ApplyNextSelectionSlotInOrder();
+                return;
+            }
+
             ApplySelectionSlotsParallel();
+        }
+
+        private bool ShouldApplySelectionSequential()
+        {
+            return manager != null && !manager.IsPreloadEnabled();
         }
 
         public void NotifyFrameDisplayFinished(int slotIndex, int revision, int requestSerial)
@@ -590,14 +681,15 @@ namespace RemotePhotoSystem
                     continue;
                 }
 
-                if (!RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slot]))
+                VRCUrl url = GetDisplayUrlAtOrderIndex(_activeDisplayOrderIndex);
+                if (!RemotePhotoUrlUtility.IsValidVrcUrl(url))
                 {
-                    target.ClearPhoto();
                     _activeDisplayOrderIndex++;
                     continue;
                 }
 
-                target.LoadPhotoFromManagerSlot(syncedUrls[slot], manager, selectionRevision, this, slot, _activeDisplaySerial);
+                LogDebug("Selection apply: group=" + gameObject.name + ", revision=" + selectionRevision + ", pair=" + _activeDisplayOrderIndex + ", slot=" + slot + ", frame=" + target.gameObject.name + ", url=" + url.Get());
+                target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, this, slot, _activeDisplaySerial);
                 return;
             }
 
@@ -619,13 +711,11 @@ namespace RemotePhotoSystem
                     RemotePhotoFrame target = targets[slot];
                     if (target != null)
                     {
-                        if (RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slot]))
+                        VRCUrl url = GetDisplayUrlAtOrderIndex(orderIndex);
+                        if (RemotePhotoUrlUtility.IsValidVrcUrl(url))
                         {
-                            target.LoadPhotoFromManagerSlot(syncedUrls[slot], manager, selectionRevision, this, slot, _activeDisplaySerial);
-                        }
-                        else
-                        {
-                            target.ClearPhoto();
+                            LogDebug("Selection apply: group=" + gameObject.name + ", revision=" + selectionRevision + ", pair=" + orderIndex + ", slot=" + slot + ", frame=" + target.gameObject.name + ", url=" + url.Get());
+                            target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, this, slot, _activeDisplaySerial);
                         }
                     }
                 }
@@ -647,6 +737,16 @@ namespace RemotePhotoSystem
             }
 
             return orderIndex;
+        }
+
+        private VRCUrl GetDisplayUrlAtOrderIndex(int orderIndex)
+        {
+            if (syncedUrls == null || orderIndex < 0 || orderIndex >= syncedUrls.Length)
+            {
+                return null;
+            }
+
+            return syncedUrls[orderIndex];
         }
 
         private bool IsValidSelectionSlot(int index)
@@ -684,7 +784,7 @@ namespace RemotePhotoSystem
                 {
                     if (slot >= targets.Length ||
                         targets[slot] == null ||
-                        !RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[slot]) ||
+                        !RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[orderIndex]) ||
                         !IsSlotCurrentSelection(slot) ||
                         IsLoadOrderSlotRepeated(slot, orderIndex))
                     {
@@ -704,11 +804,14 @@ namespace RemotePhotoSystem
         {
             int count = 0;
             int index = 0;
-            while (targets != null && syncedUrls != null && index < targets.Length && index < syncedUrls.Length)
+            while (targets != null && syncedUrls != null && syncedLoadOrderSlots != null && index < syncedUrls.Length && index < syncedLoadOrderSlots.Length)
             {
-                if (targets[index] != null &&
+                int slot = syncedLoadOrderSlots[index];
+                if (slot >= 0 &&
+                    slot < targets.Length &&
+                    targets[slot] != null &&
                     RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[index]) &&
-                    IsSlotCurrentSelection(index))
+                    IsSlotCurrentSelection(slot))
                 {
                     count++;
                 }
@@ -767,6 +870,14 @@ namespace RemotePhotoSystem
             }
 
             return false;
+        }
+
+        private void LogDebug(string message)
+        {
+            if (manager != null && manager.debugLogs)
+            {
+                manager.LogDebug(message);
+            }
         }
     }
 }
