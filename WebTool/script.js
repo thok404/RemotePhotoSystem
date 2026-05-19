@@ -2,12 +2,252 @@ const manifest = {
   entries: [],
 };
 
+const translations = {
+  en: {
+    documentTitle: "RemotePhotoSystem Gallery Manager",
+    appTitle: "Gallery Manager",
+    language: "Language",
+    importJson: "Import JSON",
+    importTxt: "Import URL TXT",
+    exportUnityJson: "Export Unity JSON",
+    total: "Total",
+    landscape: "Landscape",
+    portrait: "Portrait",
+    invalidUrl: "Invalid URL",
+    selected: "Selected",
+    metadataOk: "Metadata OK",
+    bulkUrlImport: "Bulk URL Import",
+    bulkUrlPlaceholder: "Paste one image URL per line",
+    defaultOrientation: "Default Orientation",
+    addBlankEntry: "Add Blank Entry",
+    importPastedUrls: "Import Pasted URLs",
+    search: "Search",
+    searchPlaceholder: "URL, ID, tag, note",
+    orientation: "Orientation",
+    all: "All",
+    metadata: "Metadata",
+    missing: "Missing",
+    ok: "OK",
+    error: "Error",
+    pageSize: "Page Size",
+    selectPage: "Select Page",
+    selectFiltered: "Select Filtered",
+    clearSelection: "Clear Selection",
+    previous: "Previous",
+    next: "Next",
+    setSelectedLandscape: "Set Selected Landscape",
+    setSelectedPortrait: "Set Selected Portrait",
+    generateIds: "Generate IDs",
+    removeDuplicateUrls: "Remove Duplicate URLs",
+    deleteSelected: "Delete Selected",
+    tagPlaceholder: "tag",
+    addTagToSelected: "Add Tag To Selected",
+    removeTagFromSelected: "Remove Tag From Selected",
+    probeScope: "Probe Scope",
+    filtered: "Filtered",
+    missingMetadata: "Missing Metadata",
+    forceRefresh: "Force Refresh",
+    applyDetectedOrientation: "Apply Detected Orientation",
+    probeImageSizes: "Probe Image Sizes",
+    idle: "Idle",
+    tags: "Tags",
+    note: "Note",
+    delete: "Delete",
+    noEntriesToProbe: "No entries to probe.",
+    pageLabel: (page, total) => `Page ${page} / ${total}`,
+    probed: (done, total) => `Probed ${done} / ${total}`,
+    doneProbed: (total) => `Done. Probed ${total} entries.`,
+    statusOk: "OK",
+    statusCached: "Cached",
+    statusManual: "Manual",
+    statusError: "Error",
+  },
+  ja: {
+    documentTitle: "RemotePhotoSystem ギャラリーマネージャー",
+    appTitle: "ギャラリーマネージャー",
+    language: "言語",
+    importJson: "JSON を読み込み",
+    importTxt: "URL TXT を読み込み",
+    exportUnityJson: "Unity JSON を書き出し",
+    total: "合計",
+    landscape: "横向き",
+    portrait: "縦向き",
+    invalidUrl: "無効な URL",
+    selected: "選択中",
+    metadataOk: "メタデータ OK",
+    bulkUrlImport: "URL 一括読み込み",
+    bulkUrlPlaceholder: "画像 URL を 1 行に 1 つ貼り付け",
+    defaultOrientation: "デフォルト方向",
+    addBlankEntry: "空の項目を追加",
+    importPastedUrls: "貼り付けた URL を読み込み",
+    search: "検索",
+    searchPlaceholder: "URL、ID、タグ、メモ",
+    orientation: "方向",
+    all: "すべて",
+    metadata: "メタデータ",
+    missing: "未取得",
+    ok: "OK",
+    error: "エラー",
+    pageSize: "ページサイズ",
+    selectPage: "ページを選択",
+    selectFiltered: "絞り込み結果を選択",
+    clearSelection: "選択を解除",
+    previous: "前へ",
+    next: "次へ",
+    setSelectedLandscape: "選択項目を横向きに設定",
+    setSelectedPortrait: "選択項目を縦向きに設定",
+    generateIds: "ID を生成",
+    removeDuplicateUrls: "重複 URL を削除",
+    deleteSelected: "選択項目を削除",
+    tagPlaceholder: "タグ",
+    addTagToSelected: "選択項目にタグを追加",
+    removeTagFromSelected: "選択項目からタグを削除",
+    probeScope: "取得範囲",
+    filtered: "絞り込み結果",
+    missingMetadata: "メタデータ未取得",
+    forceRefresh: "強制更新",
+    applyDetectedOrientation: "検出した方向を適用",
+    probeImageSizes: "画像サイズを取得",
+    idle: "待機中",
+    tags: "タグ",
+    note: "メモ",
+    delete: "削除",
+    noEntriesToProbe: "取得対象の項目がありません。",
+    pageLabel: (page, total) => `ページ ${page} / ${total}`,
+    probed: (done, total) => `${done} / ${total} 件取得済み`,
+    doneProbed: (total) => `完了。${total} 件取得しました。`,
+    statusOk: "OK",
+    statusCached: "キャッシュ済み",
+    statusManual: "手動",
+    statusError: "エラー",
+  },
+  zh: {
+    documentTitle: "RemotePhotoSystem 图库管理器",
+    appTitle: "图库管理器",
+    language: "语言",
+    importJson: "导入 JSON",
+    importTxt: "导入 URL TXT",
+    exportUnityJson: "导出 Unity JSON",
+    total: "总数",
+    landscape: "横向构图",
+    portrait: "纵向构图",
+    invalidUrl: "无效 URL",
+    selected: "已选择",
+    metadataOk: "元数据 OK",
+    bulkUrlImport: "批量导入 URL",
+    bulkUrlPlaceholder: "每行粘贴一个图片 URL",
+    defaultOrientation: "默认方向",
+    addBlankEntry: "添加空条目",
+    importPastedUrls: "导入粘贴的 URL",
+    search: "搜索",
+    searchPlaceholder: "URL、ID、标签、备注",
+    orientation: "方向",
+    all: "全部",
+    metadata: "元数据",
+    missing: "缺失",
+    ok: "OK",
+    error: "错误",
+    pageSize: "每页数量",
+    selectPage: "选择当前页",
+    selectFiltered: "选择筛选结果",
+    clearSelection: "清除选择",
+    previous: "上一页",
+    next: "下一页",
+    setSelectedLandscape: "将选中项设为横向",
+    setSelectedPortrait: "将选中项设为纵向",
+    generateIds: "生成 ID",
+    removeDuplicateUrls: "移除重复 URL",
+    deleteSelected: "删除选中项",
+    tagPlaceholder: "标签",
+    addTagToSelected: "给选中项添加标签",
+    removeTagFromSelected: "从选中项移除标签",
+    probeScope: "探测范围",
+    filtered: "筛选结果",
+    missingMetadata: "缺失元数据",
+    forceRefresh: "强制刷新",
+    applyDetectedOrientation: "应用检测到的方向",
+    probeImageSizes: "探测图片尺寸",
+    idle: "空闲",
+    tags: "标签",
+    note: "备注",
+    delete: "删除",
+    noEntriesToProbe: "没有需要探测的条目。",
+    pageLabel: (page, total) => `第 ${page} / ${total} 页`,
+    probed: (done, total) => `已探测 ${done} / ${total}`,
+    doneProbed: (total) => `完成。已探测 ${total} 个条目。`,
+    statusOk: "OK",
+    statusCached: "已缓存",
+    statusManual: "手动",
+    statusError: "错误",
+  },
+  ko: {
+    documentTitle: "RemotePhotoSystem 갤러리 매니저",
+    appTitle: "갤러리 매니저",
+    language: "언어",
+    importJson: "JSON 가져오기",
+    importTxt: "URL TXT 가져오기",
+    exportUnityJson: "Unity JSON 내보내기",
+    total: "전체",
+    landscape: "가로",
+    portrait: "세로",
+    invalidUrl: "잘못된 URL",
+    selected: "선택됨",
+    metadataOk: "메타데이터 OK",
+    bulkUrlImport: "URL 일괄 가져오기",
+    bulkUrlPlaceholder: "이미지 URL 을 한 줄에 하나씩 붙여넣기",
+    defaultOrientation: "기본 방향",
+    addBlankEntry: "빈 항목 추가",
+    importPastedUrls: "붙여넣은 URL 가져오기",
+    search: "검색",
+    searchPlaceholder: "URL, ID, 태그, 메모",
+    orientation: "방향",
+    all: "전체",
+    metadata: "메타데이터",
+    missing: "없음",
+    ok: "OK",
+    error: "오류",
+    pageSize: "페이지 크기",
+    selectPage: "현재 페이지 선택",
+    selectFiltered: "필터 결과 선택",
+    clearSelection: "선택 해제",
+    previous: "이전",
+    next: "다음",
+    setSelectedLandscape: "선택 항목을 가로로 설정",
+    setSelectedPortrait: "선택 항목을 세로로 설정",
+    generateIds: "ID 생성",
+    removeDuplicateUrls: "중복 URL 제거",
+    deleteSelected: "선택 항목 삭제",
+    tagPlaceholder: "태그",
+    addTagToSelected: "선택 항목에 태그 추가",
+    removeTagFromSelected: "선택 항목에서 태그 제거",
+    probeScope: "탐색 범위",
+    filtered: "필터 결과",
+    missingMetadata: "메타데이터 없음",
+    forceRefresh: "강제 새로고침",
+    applyDetectedOrientation: "감지된 방향 적용",
+    probeImageSizes: "이미지 크기 탐색",
+    idle: "대기 중",
+    tags: "태그",
+    note: "메모",
+    delete: "삭제",
+    noEntriesToProbe: "탐색할 항목이 없습니다.",
+    pageLabel: (page, total) => `페이지 ${page} / ${total}`,
+    probed: (done, total) => `${done} / ${total} 탐색 완료`,
+    doneProbed: (total) => `완료. ${total}개 항목을 탐색했습니다.`,
+    statusOk: "OK",
+    statusCached: "캐시됨",
+    statusManual: "수동",
+    statusError: "오류",
+  },
+};
+
 const state = {
   selected: new Set(),
   filteredIndices: [],
   page: 0,
   pageSize: 100,
   probing: false,
+  language: getInitialLanguage(),
 };
 
 const metadataDbName = "RemotePhotoSystemGalleryMetadata";
@@ -17,6 +257,7 @@ const elements = {
   tableBody: document.getElementById("entryTableBody"),
   jsonInput: document.getElementById("jsonInput"),
   txtInput: document.getElementById("txtInput"),
+  languageSelect: document.getElementById("languageSelect"),
   bulkUrls: document.getElementById("bulkUrls"),
   bulkOrientation: document.getElementById("bulkOrientation"),
   searchInput: document.getElementById("searchInput"),
@@ -49,6 +290,7 @@ document.getElementById("deleteSelectedButton").addEventListener("click", delete
 document.getElementById("addTagButton").addEventListener("click", () => editSelectedTag(true));
 document.getElementById("removeTagButton").addEventListener("click", () => editSelectedTag(false));
 document.getElementById("probeButton").addEventListener("click", probeImageSizes);
+elements.languageSelect.addEventListener("change", () => setLanguage(elements.languageSelect.value));
 
 elements.searchInput.addEventListener("input", () => {
   state.page = 0;
@@ -201,8 +443,8 @@ function renderRow(entryIndex) {
       </td>
       <td class="orientation-cell">
         <select data-field="orientation" data-index="${entryIndex}">
-          <option value="Landscape" ${entry.orientation === "Landscape" ? "selected" : ""}>Landscape</option>
-          <option value="Portrait" ${entry.orientation === "Portrait" ? "selected" : ""}>Portrait</option>
+          <option value="Landscape" ${entry.orientation === "Landscape" ? "selected" : ""}>${escapeHtml(t("landscape"))}</option>
+          <option value="Portrait" ${entry.orientation === "Portrait" ? "selected" : ""}>${escapeHtml(t("portrait"))}</option>
         </select>
       </td>
       <td>
@@ -213,7 +455,7 @@ function renderRow(entryIndex) {
       </td>
       <td class="metadata-cell">${escapeHtml(metadataText)}</td>
       <td class="row-actions">
-        <button data-remove="${entryIndex}">Delete</button>
+        <button data-remove="${entryIndex}">${escapeHtml(t("delete"))}</button>
       </td>
     </tr>
   `;
@@ -320,7 +562,7 @@ function updateSummary() {
   document.getElementById("invalidCount").textContent = String(invalid);
   document.getElementById("selectedCount").textContent = String(state.selected.size);
   document.getElementById("metadataCount").textContent = String(metadataOk);
-  document.getElementById("pageLabel").textContent = `Page ${Math.min(state.page + 1, pageCount)} / ${pageCount}`;
+  document.getElementById("pageLabel").textContent = t("pageLabel", Math.min(state.page + 1, pageCount), pageCount);
 }
 
 function getPageCount() {
@@ -410,7 +652,7 @@ async function probeImageSizes() {
 
   const indices = getProbeIndices();
   if (indices.length === 0) {
-    elements.probeStatus.textContent = "No entries to probe.";
+    elements.probeStatus.textContent = t("noEntriesToProbe");
     return;
   }
 
@@ -433,11 +675,11 @@ async function probeImageSizes() {
 
     completed += 1;
     elements.probeProgress.value = completed;
-    elements.probeStatus.textContent = `Probed ${completed} / ${indices.length}`;
+    elements.probeStatus.textContent = t("probed", completed, indices.length);
   });
 
   state.probing = false;
-  elements.probeStatus.textContent = `Done. Probed ${indices.length} entries.`;
+  elements.probeStatus.textContent = t("doneProbed", indices.length);
   render();
 }
 
@@ -594,14 +836,34 @@ function parseTags(value) {
 
 function formatMetadata(metadata) {
   if (!metadata || !metadata.status) {
-    return "Missing";
+    return t("missing");
   }
 
   if (metadata.width > 0 && metadata.height > 0) {
-    return `${metadata.status}: ${metadata.width} x ${metadata.height}`;
+    return `${formatMetadataStatus(metadata.status)}: ${metadata.width} x ${metadata.height}`;
   }
 
-  return `${metadata.status}${metadata.error ? `: ${metadata.error}` : ""}`;
+  return `${formatMetadataStatus(metadata.status)}${metadata.error ? `: ${metadata.error}` : ""}`;
+}
+
+function formatMetadataStatus(status) {
+  if (status === "ok") {
+    return t("statusOk");
+  }
+
+  if (status === "cached") {
+    return t("statusCached");
+  }
+
+  if (status === "manual") {
+    return t("statusManual");
+  }
+
+  if (status === "error") {
+    return t("statusError");
+  }
+
+  return status;
 }
 
 function buildUniqueId(url, fallbackIndex = manifest.entries.length) {
@@ -649,4 +911,42 @@ function escapeHtml(value) {
     .replaceAll("\"", "&quot;");
 }
 
+function getInitialLanguage() {
+  const stored = localStorage.getItem("RemotePhotoSystemGalleryLanguage");
+  if (translations[stored]) {
+    return stored;
+  }
+
+  const browserLanguage = navigator.language.slice(0, 2).toLowerCase();
+  return translations[browserLanguage] ? browserLanguage : "en";
+}
+
+function setLanguage(language) {
+  state.language = translations[language] ? language : "en";
+  localStorage.setItem("RemotePhotoSystemGalleryLanguage", state.language);
+  applyTranslations();
+  render();
+}
+
+function applyTranslations() {
+  document.documentElement.lang = state.language;
+  document.title = t("documentTitle");
+  elements.languageSelect.value = state.language;
+
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+}
+
+function t(key, ...args) {
+  const dictionary = translations[state.language] || translations.en;
+  const value = dictionary[key] ?? translations.en[key] ?? key;
+  return typeof value === "function" ? value(...args) : value;
+}
+
+applyTranslations();
 render();

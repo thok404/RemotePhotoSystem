@@ -25,7 +25,7 @@ namespace RemotePhotoSystem.Editor
         private static readonly GUIContent MetallicLabel = new GUIContent("Metallic");
         private static readonly GUIContent NormalMapLabel = new GUIContent("Normal Map");
         private static readonly GUIContent SmoothnessSourceLabel = new GUIContent("Source");
-        private static readonly string[] SmoothnessSources = { "Metallic Alpha" };
+        private static readonly string[] SmoothnessSources = { "Metallic Alpha", "Albedo Alpha" };
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
         {
@@ -34,6 +34,7 @@ namespace RemotePhotoSystem.Editor
             MaterialProperty metallicMap = FindProperty("_MetallicGlossMap", properties);
             MaterialProperty metallic = FindProperty("_Metallic", properties);
             MaterialProperty smoothness = FindProperty("_Glossiness", properties);
+            MaterialProperty smoothnessSource = FindProperty("_SmoothnessTextureChannel", properties);
             MaterialProperty normalMap = FindProperty("_BumpMap", properties);
             MaterialProperty normalScale = FindProperty("_BumpScale", properties);
 
@@ -42,10 +43,8 @@ namespace RemotePhotoSystem.Editor
 
             EditorGUI.indentLevel++;
             materialEditor.RangeProperty(smoothness, "Smoothness");
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.Popup(SmoothnessSourceLabel, 0, SmoothnessSources);
-            }
+            int smoothnessSourceIndex = Mathf.Clamp(Mathf.RoundToInt(smoothnessSource.floatValue), 0, SmoothnessSources.Length - 1);
+            smoothnessSource.floatValue = EditorGUILayout.Popup(SmoothnessSourceLabel, smoothnessSourceIndex, SmoothnessSources);
             EditorGUI.indentLevel--;
 
             materialEditor.TexturePropertySingleLine(NormalMapLabel, normalMap, normalScale);

@@ -23,6 +23,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         _Color ("Color", Color) = (1, 1, 1, 1)
         _MetallicGlossMap ("Metallic/Smoothness Mask", 2D) = "white" {}
         _Glossiness ("Smoothness Strength", Range(0, 1)) = 0.2
+        [Enum(Metallic Alpha,0,Albedo Alpha,1)] _SmoothnessTextureChannel ("Smoothness Source", Float) = 0
         _Metallic ("Metallic Strength", Range(0, 1)) = 0
         [Normal] _BumpMap ("Normal Map", 2D) = "bump" {}
         _BumpScale ("Normal Strength", Range(0, 2)) = 1
@@ -57,6 +58,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         fixed4 _Color;
         sampler2D _MetallicGlossMap;
         half _Glossiness;
+        half _SmoothnessTextureChannel;
         half _Metallic;
         sampler2D _BumpMap;
         half _BumpScale;
@@ -178,9 +180,10 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             }
 
             fixed4 metallicGloss = tex2D(_MetallicGlossMap, uv);
+            half smoothnessMask = _SmoothnessTextureChannel > 0.5 ? c.a : metallicGloss.a;
             o.Albedo = c.rgb;
             o.Metallic = _Metallic * metallicGloss.r;
-            o.Smoothness = _Glossiness * metallicGloss.a;
+            o.Smoothness = _Glossiness * smoothnessMask;
             o.Normal = UnpackScaleNormal(tex2D(_BumpMap, IN.uv_BumpMap), _BumpScale);
         }
         ENDCG

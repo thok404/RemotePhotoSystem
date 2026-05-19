@@ -11,67 +11,76 @@
     <section class="header">
       <div>
         <p class="eyebrow">RemotePhotoSystem</p>
-        <h1>Gallery Manager</h1>
+        <h1 data-i18n="appTitle">Gallery Manager</h1>
       </div>
       <div class="file-actions">
-        <button id="importJsonButton">Import JSON</button>
-        <button id="importTxtButton">Import URL TXT</button>
-        <button id="exportButton" class="primary">Export Unity JSON</button>
+        <label class="language-select">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+            <option value="ko">한국어</option>
+          </select>
+        </label>
+        <button id="importJsonButton" data-i18n="importJson">Import JSON</button>
+        <button id="importTxtButton" data-i18n="importTxt">Import URL TXT</button>
+        <button id="exportButton" class="primary" data-i18n="exportUnityJson">Export Unity JSON</button>
         <input id="jsonInput" type="file" accept=".json,application/json" hidden>
         <input id="txtInput" type="file" accept=".txt,text/plain" hidden>
       </div>
     </section>
 
     <section class="summary">
-      <div><strong id="totalCount">0</strong><span>Total</span></div>
-      <div><strong id="landscapeCount">0</strong><span>Landscape</span></div>
-      <div><strong id="portraitCount">0</strong><span>Portrait</span></div>
-      <div><strong id="invalidCount">0</strong><span>Invalid URL</span></div>
-      <div><strong id="selectedCount">0</strong><span>Selected</span></div>
-      <div><strong id="metadataCount">0</strong><span>Metadata OK</span></div>
+      <div><strong id="totalCount">0</strong><span data-i18n="total">Total</span></div>
+      <div><strong id="landscapeCount">0</strong><span data-i18n="landscape">Landscape</span></div>
+      <div><strong id="portraitCount">0</strong><span data-i18n="portrait">Portrait</span></div>
+      <div><strong id="invalidCount">0</strong><span data-i18n="invalidUrl">Invalid URL</span></div>
+      <div><strong id="selectedCount">0</strong><span data-i18n="selected">Selected</span></div>
+      <div><strong id="metadataCount">0</strong><span data-i18n="metadataOk">Metadata OK</span></div>
     </section>
 
     <section class="panel import-panel">
       <div>
-        <label for="bulkUrls">Bulk URL Import</label>
-        <textarea id="bulkUrls" rows="6" placeholder="Paste one image URL per line"></textarea>
+        <label for="bulkUrls" data-i18n="bulkUrlImport">Bulk URL Import</label>
+        <textarea id="bulkUrls" rows="6" placeholder="Paste one image URL per line" data-i18n-placeholder="bulkUrlPlaceholder"></textarea>
       </div>
       <div class="stack">
-        <label for="bulkOrientation">Default Orientation</label>
+        <label for="bulkOrientation" data-i18n="defaultOrientation">Default Orientation</label>
         <select id="bulkOrientation">
-          <option value="Landscape">Landscape</option>
-          <option value="Portrait">Portrait</option>
+          <option value="Landscape" data-i18n="landscape">Landscape</option>
+          <option value="Portrait" data-i18n="portrait">Portrait</option>
         </select>
-        <button id="addEntryButton">Add Blank Entry</button>
-        <button id="bulkImportButton" class="primary">Import Pasted URLs</button>
+        <button id="addEntryButton" data-i18n="addBlankEntry">Add Blank Entry</button>
+        <button id="bulkImportButton" class="primary" data-i18n="importPastedUrls">Import Pasted URLs</button>
       </div>
     </section>
 
     <section class="panel controls">
       <div class="control-grid">
         <label>
-          Search
-          <input id="searchInput" type="search" placeholder="URL, ID, tag, note">
+          <span data-i18n="search">Search</span>
+          <input id="searchInput" type="search" placeholder="URL, ID, tag, note" data-i18n-placeholder="searchPlaceholder">
         </label>
         <label>
-          Orientation
+          <span data-i18n="orientation">Orientation</span>
           <select id="orientationFilter">
-            <option value="All">All</option>
-            <option value="Landscape">Landscape</option>
-            <option value="Portrait">Portrait</option>
+            <option value="All" data-i18n="all">All</option>
+            <option value="Landscape" data-i18n="landscape">Landscape</option>
+            <option value="Portrait" data-i18n="portrait">Portrait</option>
           </select>
         </label>
         <label>
-          Metadata
+          <span data-i18n="metadata">Metadata</span>
           <select id="metadataFilter">
-            <option value="All">All</option>
-            <option value="Missing">Missing</option>
-            <option value="Ok">OK</option>
-            <option value="Error">Error</option>
+            <option value="All" data-i18n="all">All</option>
+            <option value="Missing" data-i18n="missing">Missing</option>
+            <option value="Ok" data-i18n="ok">OK</option>
+            <option value="Error" data-i18n="error">Error</option>
           </select>
         </label>
         <label>
-          Page Size
+          <span data-i18n="pageSize">Page Size</span>
           <select id="pageSizeSelect">
             <option value="100">100</option>
             <option value="200">200</option>
@@ -80,53 +89,53 @@
         </label>
       </div>
       <div class="button-row">
-        <button id="selectPageButton">Select Page</button>
-        <button id="selectFilteredButton">Select Filtered</button>
-        <button id="clearSelectionButton">Clear Selection</button>
-        <button id="prevPageButton">Previous</button>
+        <button id="selectPageButton" data-i18n="selectPage">Select Page</button>
+        <button id="selectFilteredButton" data-i18n="selectFiltered">Select Filtered</button>
+        <button id="clearSelectionButton" data-i18n="clearSelection">Clear Selection</button>
+        <button id="prevPageButton" data-i18n="previous">Previous</button>
         <span id="pageLabel">Page 1 / 1</span>
-        <button id="nextPageButton">Next</button>
+        <button id="nextPageButton" data-i18n="next">Next</button>
       </div>
     </section>
 
     <section class="panel batch-panel">
       <div class="button-row">
-        <button id="batchLandscapeButton">Set Selected Landscape</button>
-        <button id="batchPortraitButton">Set Selected Portrait</button>
-        <button id="generateIdsButton">Generate IDs</button>
-        <button id="dedupeButton">Remove Duplicate URLs</button>
-        <button id="deleteSelectedButton" class="danger">Delete Selected</button>
+        <button id="batchLandscapeButton" data-i18n="setSelectedLandscape">Set Selected Landscape</button>
+        <button id="batchPortraitButton" data-i18n="setSelectedPortrait">Set Selected Portrait</button>
+        <button id="generateIdsButton" data-i18n="generateIds">Generate IDs</button>
+        <button id="dedupeButton" data-i18n="removeDuplicateUrls">Remove Duplicate URLs</button>
+        <button id="deleteSelectedButton" class="danger" data-i18n="deleteSelected">Delete Selected</button>
       </div>
       <div class="tag-row">
-        <input id="tagInput" type="text" placeholder="tag">
-        <button id="addTagButton">Add Tag To Selected</button>
-        <button id="removeTagButton">Remove Tag From Selected</button>
+        <input id="tagInput" type="text" placeholder="tag" data-i18n-placeholder="tagPlaceholder">
+        <button id="addTagButton" data-i18n="addTagToSelected">Add Tag To Selected</button>
+        <button id="removeTagButton" data-i18n="removeTagFromSelected">Remove Tag From Selected</button>
       </div>
     </section>
 
     <section class="panel metadata-panel">
       <div class="control-grid">
         <label>
-          Probe Scope
+          <span data-i18n="probeScope">Probe Scope</span>
           <select id="probeScope">
-            <option value="Selected">Selected</option>
-            <option value="Filtered">Filtered</option>
-            <option value="Missing">Missing Metadata</option>
-            <option value="All">All</option>
+            <option value="Selected" data-i18n="selected">Selected</option>
+            <option value="Filtered" data-i18n="filtered">Filtered</option>
+            <option value="Missing" data-i18n="missingMetadata">Missing Metadata</option>
+            <option value="All" data-i18n="all">All</option>
           </select>
         </label>
         <label class="checkbox-label">
           <input id="forceRefreshProbe" type="checkbox">
-          Force Refresh
+          <span data-i18n="forceRefresh">Force Refresh</span>
         </label>
         <label class="checkbox-label">
           <input id="overwriteOrientation" type="checkbox" checked>
-          Apply Detected Orientation
+          <span data-i18n="applyDetectedOrientation">Apply Detected Orientation</span>
         </label>
-        <button id="probeButton" class="primary">Probe Image Sizes</button>
+        <button id="probeButton" class="primary" data-i18n="probeImageSizes">Probe Image Sizes</button>
       </div>
       <progress id="probeProgress" value="0" max="1"></progress>
-      <p id="probeStatus">Idle</p>
+      <p id="probeStatus" data-i18n="idle">Idle</p>
     </section>
 
     <section class="table-shell">
@@ -136,10 +145,10 @@
             <th></th>
             <th>ID</th>
             <th>URL</th>
-            <th>Orientation</th>
-            <th>Tags</th>
-            <th>Note</th>
-            <th>Metadata</th>
+            <th data-i18n="orientation">Orientation</th>
+            <th data-i18n="tags">Tags</th>
+            <th data-i18n="note">Note</th>
+            <th data-i18n="metadata">Metadata</th>
             <th></th>
           </tr>
         </thead>
