@@ -9,6 +9,8 @@ namespace RemotePhotoSystem
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class RemotePhotoManager : UdonSharpBehaviour
     {
+        #region Inspector Fields
+
         public RemotePhotoInspectorLanguage inspectorLanguage = RemotePhotoInspectorLanguage.English;
 
         public TextAsset galleryConfigFile;
@@ -30,15 +32,23 @@ namespace RemotePhotoSystem
         [HideInInspector] public Material preloadDownloadMaterial;
         [HideInInspector] public Material[] preloadDownloadMaterials = new Material[0];
 
+        #endregion
+
+        #region Baked Gallery
+
         [HideInInspector] public VRCUrl[] bakedLandscapeUrls = new VRCUrl[0];
         [HideInInspector] public VRCUrl[] bakedPortraitUrls = new VRCUrl[0];
 
         [HideInInspector] public VRCUrl[] landscapeUrls = new VRCUrl[0];
         [HideInInspector] public VRCUrl[] portraitUrls = new VRCUrl[0];
 
-        [UdonSynced] public VRCUrl[] preloadLandscapeUrls = new VRCUrl[0];
-        [UdonSynced] public VRCUrl[] preloadPortraitUrls = new VRCUrl[0];
-        [UdonSynced] public VRCUrl[] preloadOrderedUrls = new VRCUrl[0];
+        #endregion
+
+        #region Synced Playback State
+
+        [UdonSynced] public VRCUrl[] sequencePreloadLandscapeUrls = new VRCUrl[0];
+        [UdonSynced] public VRCUrl[] sequencePreloadPortraitUrls = new VRCUrl[0];
+        [UdonSynced] public VRCUrl[] sequencePreloadOrderedUrls = new VRCUrl[0];
         [UdonSynced] public int preloadRevision;
         [UdonSynced] public bool preloadReady;
         [UdonSynced] public int nextLandscapeIndex;
@@ -52,9 +62,17 @@ namespace RemotePhotoSystem
         [UdonSynced] public int sequenceFocusGroupIndex = -1;
         [UdonSynced] public int sequenceFocusDirection = 1;
 
+        #endregion
+
+        #region Runtime Status
+
         [HideInInspector] public string lastGalleryError = string.Empty;
         [HideInInspector] public bool hasGalleryData;
         [HideInInspector] public string lastPreloadStatus = string.Empty;
+
+        #endregion
+
+        #region Runtime State
 
         private VRCImageDownloader _preloadDownloader;
         private IVRCImageDownload _currentPreloadDownload;
@@ -62,14 +80,12 @@ namespace RemotePhotoSystem
         private VRCUrl _activePreloadUrl;
         private string _activePreloadUrlString = string.Empty;
         private bool _activePreloadLandscape;
-        private int _activePreloadIndex;
         private int _activePreloadRetryCount;
         private bool _preloadInProgress;
         private bool _preloadContinueScheduled;
         private int _preloadScanOrientation;
         private int _preloadScanIndex;
         private int _preloadScanOrderedIndex;
-        private int _activePreloadOrderedIndex = -1;
         private int _nextPreloadMaterialIndex;
         private int _activeSequenceLandscapeStart;
         private int _activeSequencePortraitStart;
@@ -103,10 +119,19 @@ namespace RemotePhotoSystem
         private int _loadOnceRetryCount;
 
         private string[] _failedUrlStrings = new string[0];
+
+        #endregion
+
+        #region Constants
+
         private const string PreloadTexturePropertyName = "_RemotePhotoPreloadTex";
         private const float PreloadDownloadIntervalSeconds = 5.1f;
         private const float LoadOnceRetryDelaySeconds = 1f;
         private const int MaxLoadOnceRetryCount = 10;
+
+        #endregion
+
+        #region Unity Lifecycle
 
         public void Start()
         {
@@ -141,6 +166,10 @@ namespace RemotePhotoSystem
             EnsureMasterOwnership();
             TryRunLoadOnceOnStart();
         }
+
+        #endregion
+
+        #region Startup Load Once
 
         public bool IsPreloadEnabled()
         {
@@ -223,6 +252,10 @@ namespace RemotePhotoSystem
             SendCustomEventDelayedSeconds(nameof(_RetryLoadOnceOnStart), LoadOnceRetryDelaySeconds);
         }
 
+        #endregion
+
+        #region Cleanup
+
         public void OnDestroy()
         {
             DisposeCurrentPreloadDownload();
@@ -235,6 +268,10 @@ namespace RemotePhotoSystem
                 _preloadDownloader = null;
             }
         }
+
+        #endregion
+
+        #region Gallery And Selection API
 
         public bool HasGalleryData()
         {
@@ -358,6 +395,10 @@ namespace RemotePhotoSystem
             }
         }
 
+        #endregion
+
+        #region Random Preload Requests
+
         public bool BeginRandomConsume(RemotePhotoGroup group)
         {
             if (group == null || !IsPreloadEnabled() || configuredPlayMode != RemotePhotoPlayMode.Random)
@@ -414,6 +455,10 @@ namespace RemotePhotoSystem
             StartPreloadingQueue();
             return true;
         }
+
+        #endregion
+
+        #region Preload Coordination
 
         public void NotifySelectionStateChanged()
         {
@@ -697,7 +742,7 @@ namespace RemotePhotoSystem
                     if (target != null &&
                         targetLandscape == landscape &&
                         RemotePhotoUrlUtility.IsValidVrcUrl(urls[pairIndex]) &&
-                        !IsDisplayedUrlString(GetSafeUrlString(urls[pairIndex])))
+                        !IsFrameDisplayingUrl(target, GetSafeUrlString(urls[pairIndex])))
                     {
                         count++;
                     }
@@ -706,66 +751,6 @@ namespace RemotePhotoSystem
                 }
 
                 groupIndex++;
-            }
-
-            return count;
-        }
-
-        private bool FillImmediateRandomPage(RemotePhotoFrame[] targets, VRCUrl[] outputUrls)
-        {
-            int landscapeCount = CountTargetsByOrientation(targets, true);
-            int portraitCount = CountTargetsByOrientation(targets, false);
-            VRCUrl[] selectedLandscape = new VRCUrl[landscapeCount];
-            VRCUrl[] selectedPortrait = new VRCUrl[portraitCount];
-            int selectedLandscapeCount = 0;
-            int selectedPortraitCount = 0;
-            int index = 0;
-            while (targets != null && outputUrls != null && index < targets.Length && index < outputUrls.Length)
-            {
-                RemotePhotoFrame target = targets[index];
-                if (target != null)
-                {
-                    bool landscape = target.orientation == RemotePhotoOrientation.Landscape;
-                    VRCUrl selectedUrl = landscape
-                        ? BuildActualRandomUrl(true, selectedLandscape, selectedLandscapeCount)
-                        : BuildActualRandomUrl(false, selectedPortrait, selectedPortraitCount);
-                    if (!RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
-                    {
-                        return false;
-                    }
-
-                    outputUrls[index] = selectedUrl;
-                    if (landscape)
-                    {
-                        selectedLandscape[selectedLandscapeCount] = selectedUrl;
-                        selectedLandscapeCount++;
-                    }
-                    else
-                    {
-                        selectedPortrait[selectedPortraitCount] = selectedUrl;
-                        selectedPortraitCount++;
-                    }
-                }
-
-                index++;
-            }
-
-            return true;
-        }
-
-        private int CountTargetsByOrientation(RemotePhotoFrame[] targets, bool landscape)
-        {
-            int count = 0;
-            int index = 0;
-            while (targets != null && index < targets.Length)
-            {
-                RemotePhotoFrame target = targets[index];
-                if (target != null && (target.orientation == RemotePhotoOrientation.Landscape) == landscape)
-                {
-                    count++;
-                }
-
-                index++;
             }
 
             return count;
@@ -829,6 +814,7 @@ namespace RemotePhotoSystem
             _cachedAccessTicks[index] = 0;
 
             LogDebug("Cache used by frame: " + urlString + ". Cached=" + GetCachedTextureCount() + "/" + GetMaxCachedTextures());
+            StartPreloadingQueue();
         }
 
         public void RetainCachedTextureForFrame(VRCUrl url, RemotePhotoFrame frame)
@@ -849,6 +835,7 @@ namespace RemotePhotoSystem
             _cachedAccessTicks[index] = _cacheAccessTick;
             MoveCachedDownloadToDisplayedFrame(frame, urlString, _cachedDownloads[index]);
             LogDebug("Cache retained by frame: " + urlString + ". Cached=" + GetCachedTextureCount() + "/" + GetMaxCachedTextures());
+            StartPreloadingQueue();
         }
 
         public void RequestPrepareForCounts(int landscapeCount, int portraitCount)
@@ -893,7 +880,7 @@ namespace RemotePhotoSystem
             preloadReady = !IsPreloadEnabled();
             preloadRevision++;
             lastPreloadStatus = preloadReady ? "Preload disabled." : "Preloading prediction cache.";
-            LogDebug("Prediction pool rebuilt. Ordered=" + (preloadOrderedUrls == null ? 0 : preloadOrderedUrls.Length) + ", Landscape=" + (preloadLandscapeUrls == null ? 0 : preloadLandscapeUrls.Length) + ", Portrait=" + (preloadPortraitUrls == null ? 0 : preloadPortraitUrls.Length));
+            LogDebug("Sequence prediction pool rebuilt. Ordered=" + (sequencePreloadOrderedUrls == null ? 0 : sequencePreloadOrderedUrls.Length) + ", Landscape=" + (sequencePreloadLandscapeUrls == null ? 0 : sequencePreloadLandscapeUrls.Length) + ", Portrait=" + (sequencePreloadPortraitUrls == null ? 0 : sequencePreloadPortraitUrls.Length));
             RequestSerialization();
             StartPreloadingQueue();
         }
@@ -1180,7 +1167,7 @@ namespace RemotePhotoSystem
         {
             if (!IsPreloadEnabled())
             {
-                preloadReady = preloadLandscapeUrls != null && preloadPortraitUrls != null;
+                preloadReady = sequencePreloadLandscapeUrls != null && sequencePreloadPortraitUrls != null;
                 lastPreloadStatus = "Preload disabled.";
                 LogDebug("Preload disabled. Prediction cache is inactive.");
                 if (Networking.IsOwner(gameObject))
@@ -1207,7 +1194,6 @@ namespace RemotePhotoSystem
             _preloadScanOrientation = 0;
             _preloadScanIndex = 0;
             _preloadScanOrderedIndex = 0;
-            _activePreloadOrderedIndex = -1;
             _activePreloadRetryCount = 0;
             _preloadContinueScheduled = false;
             LogDebug("Preload scan started.");
@@ -1371,15 +1357,19 @@ namespace RemotePhotoSystem
                 return currentUrl;
             }
 
+            if (HasPendingCurrentSyncedDisplay())
+            {
+                return null;
+            }
+
             if (configuredPlayMode == RemotePhotoPlayMode.Random)
             {
                 return FindNextRandomPreloadUrl();
             }
 
-            while (preloadOrderedUrls != null && _preloadScanOrderedIndex < preloadOrderedUrls.Length)
+            while (sequencePreloadOrderedUrls != null && _preloadScanOrderedIndex < sequencePreloadOrderedUrls.Length)
             {
-                VRCUrl url = preloadOrderedUrls[_preloadScanOrderedIndex];
-                _activePreloadOrderedIndex = _preloadScanOrderedIndex;
+                VRCUrl url = sequencePreloadOrderedUrls[_preloadScanOrderedIndex];
                 SetActivePreloadLocation(url);
                 _preloadScanOrderedIndex++;
 
@@ -1391,13 +1381,11 @@ namespace RemotePhotoSystem
 
             while (_preloadScanOrientation < 2)
             {
-                VRCUrl[] source = _preloadScanOrientation == 0 ? preloadLandscapeUrls : preloadPortraitUrls;
+                VRCUrl[] source = _preloadScanOrientation == 0 ? sequencePreloadLandscapeUrls : sequencePreloadPortraitUrls;
                 while (source != null && _preloadScanIndex < source.Length)
                 {
                     VRCUrl url = source[_preloadScanIndex];
                     _activePreloadLandscape = _preloadScanOrientation == 0;
-                    _activePreloadIndex = _preloadScanIndex;
-                    _activePreloadOrderedIndex = FindUrlInArray(preloadOrderedUrls, GetSafeUrlString(url));
                     _preloadScanIndex++;
 
                     if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTextureQuiet(url) == null)
@@ -1612,76 +1600,26 @@ namespace RemotePhotoSystem
             }
         }
 
-        private void ReplaceFailedPreloadUrl(bool landscape, int index)
-        {
-            if (!Networking.IsOwner(gameObject))
-            {
-                return;
-            }
-
-            if (configuredPlayMode == RemotePhotoPlayMode.Random)
-            {
-                AdvancePreloadCursor();
-                return;
-            }
-
-            VRCUrl replacement = landscape ? BuildReplacementLandscapeUrl() : BuildReplacementPortraitUrl();
-            if (_activePreloadOrderedIndex >= 0 && preloadOrderedUrls != null && _activePreloadOrderedIndex < preloadOrderedUrls.Length)
-            {
-                preloadOrderedUrls[_activePreloadOrderedIndex] = replacement;
-                _preloadScanOrderedIndex = _activePreloadOrderedIndex;
-            }
-
-            if (landscape)
-            {
-                if (preloadLandscapeUrls != null && index >= 0 && index < preloadLandscapeUrls.Length)
-                {
-                    preloadLandscapeUrls[index] = replacement;
-                    _preloadScanOrientation = 0;
-                    _preloadScanIndex = index;
-                }
-            }
-            else
-            {
-                if (preloadPortraitUrls != null && index >= 0 && index < preloadPortraitUrls.Length)
-                {
-                    preloadPortraitUrls[index] = replacement;
-                    _preloadScanOrientation = 1;
-                    _preloadScanIndex = index;
-                }
-            }
-
-            preloadRevision++;
-            LogDebug("Prediction URL replaced at " + (landscape ? "landscape" : "portrait") + " index " + index);
-            RequestSerialization();
-        }
-
         private void SetActivePreloadLocation(VRCUrl url)
         {
-            string urlString = GetSafeUrlString(url);
-            _activePreloadOrderedIndex = configuredPlayMode == RemotePhotoPlayMode.Random
-                ? -1
-                : FindUrlInArray(preloadOrderedUrls, urlString);
             _activePreloadLandscape = IsUrlInOrientationPool(true, url);
-            _activePreloadIndex = -1;
             if (configuredPlayMode == RemotePhotoPlayMode.Random)
             {
                 return;
             }
 
-            int index = FindUrlInArray(preloadLandscapeUrls, urlString);
+            string urlString = GetSafeUrlString(url);
+            int index = FindUrlInArray(sequencePreloadLandscapeUrls, urlString);
             if (index >= 0)
             {
                 _activePreloadLandscape = true;
-                _activePreloadIndex = index;
                 return;
             }
 
-            index = FindUrlInArray(preloadPortraitUrls, urlString);
+            index = FindUrlInArray(sequencePreloadPortraitUrls, urlString);
             if (index >= 0)
             {
                 _activePreloadLandscape = false;
-                _activePreloadIndex = index;
             }
         }
 
@@ -1706,19 +1644,6 @@ namespace RemotePhotoSystem
             return -1;
         }
 
-        private bool ContainsPreloadUrl(VRCUrl url)
-        {
-            string urlString = GetSafeUrlString(url);
-            if (string.IsNullOrEmpty(urlString))
-            {
-                return false;
-            }
-
-            return FindUrlInArray(preloadOrderedUrls, urlString) >= 0 ||
-                FindUrlInArray(preloadLandscapeUrls, urlString) >= 0 ||
-                FindUrlInArray(preloadPortraitUrls, urlString) >= 0;
-        }
-
         private bool HasOrderedPreloadGroups()
         {
             return managedGroups != null && managedGroups.Length > 0;
@@ -1729,17 +1654,6 @@ namespace RemotePhotoSystem
             return configuredPlayMode != RemotePhotoPlayMode.Random &&
                 sequenceFocusGroupIndex >= 0 &&
                 groupIndex != sequenceFocusGroupIndex;
-        }
-
-        private bool HasPreloadUrlForOrientation(bool landscape)
-        {
-            VRCUrl[] source = landscape ? preloadLandscapeUrls : preloadPortraitUrls;
-            return source != null && source.Length > 0;
-        }
-
-        private bool IsUrlInAnyPool(VRCUrl url)
-        {
-            return IsUrlInOrientationPool(true, url) || IsUrlInOrientationPool(false, url);
         }
 
         private bool IsUrlInPreloadWindowString(string url)
@@ -1754,9 +1668,9 @@ namespace RemotePhotoSystem
                 return IsReadyCachedUrlString(url);
             }
 
-            return FindUrlInArray(preloadOrderedUrls, url) >= 0 ||
-                   FindUrlInArray(preloadLandscapeUrls, url) >= 0 ||
-                   FindUrlInArray(preloadPortraitUrls, url) >= 0;
+            return FindUrlInArray(sequencePreloadOrderedUrls, url) >= 0 ||
+                   FindUrlInArray(sequencePreloadLandscapeUrls, url) >= 0 ||
+                   FindUrlInArray(sequencePreloadPortraitUrls, url) >= 0;
         }
 
         private bool IsCurrentSyncedUrlString(string url)
@@ -1840,9 +1754,10 @@ namespace RemotePhotoSystem
                 {
                     RemotePhotoFrame target = GetSyncedFrameForPair(group, index);
                     VRCUrl url = urls[index];
+                    string urlString = GetSafeUrlString(url);
                     if (target != null &&
                         RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
-                        !IsDisplayedUrlString(GetSafeUrlString(url)) &&
+                        !IsFrameDisplayingUrl(target, urlString) &&
                         GetCachedTextureQuiet(url) == null)
                     {
                         return url;
@@ -1857,6 +1772,34 @@ namespace RemotePhotoSystem
             return null;
         }
 
+        private bool HasPendingCurrentSyncedDisplay()
+        {
+            int groupIndex = 0;
+            while (managedGroups != null && groupIndex < managedGroups.Length)
+            {
+                RemotePhotoGroup group = managedGroups[groupIndex];
+                VRCUrl[] urls = group == null ? null : group.syncedUrls;
+                int index = 0;
+                while (urls != null && index < urls.Length)
+                {
+                    RemotePhotoFrame target = GetSyncedFrameForPair(group, index);
+                    VRCUrl url = urls[index];
+                    if (target != null &&
+                        RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                        !IsFrameDisplayingUrl(target, GetSafeUrlString(url)))
+                    {
+                        return true;
+                    }
+
+                    index++;
+                }
+
+                groupIndex++;
+            }
+
+            return false;
+        }
+
         private int CountCachedPreloadWindowUrls()
         {
             int count = 0;
@@ -1866,9 +1809,9 @@ namespace RemotePhotoSystem
                 return CountReadyCachedUrls(true) + CountReadyCachedUrls(false);
             }
 
-            while (preloadOrderedUrls != null && index < preloadOrderedUrls.Length)
+            while (sequencePreloadOrderedUrls != null && index < sequencePreloadOrderedUrls.Length)
             {
-                VRCUrl url = preloadOrderedUrls[index];
+                VRCUrl url = sequencePreloadOrderedUrls[index];
                 if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
                     GetCachedTextureQuiet(url) != null)
                 {
@@ -1923,15 +1866,15 @@ namespace RemotePhotoSystem
         {
             if (HasOrderedPreloadGroups())
             {
-                preloadOrderedUrls = BuildOrderedPreloadUrls(landscapeCount, portraitCount);
-                preloadLandscapeUrls = ExtractPreloadUrlsByOrientation(true, preloadOrderedUrls, landscapeCount);
-                preloadPortraitUrls = ExtractPreloadUrlsByOrientation(false, preloadOrderedUrls, portraitCount);
+                sequencePreloadOrderedUrls = BuildOrderedPreloadUrls(landscapeCount, portraitCount);
+                sequencePreloadLandscapeUrls = ExtractPreloadUrlsByOrientation(true, sequencePreloadOrderedUrls, landscapeCount);
+                sequencePreloadPortraitUrls = ExtractPreloadUrlsByOrientation(false, sequencePreloadOrderedUrls, portraitCount);
                 return;
             }
 
-            preloadLandscapeUrls = EnsurePreloadUrls(true, preloadLandscapeUrls, landscapeCount);
-            preloadPortraitUrls = EnsurePreloadUrls(false, preloadPortraitUrls, portraitCount);
-            preloadOrderedUrls = MergePreloadUrls(preloadLandscapeUrls, preloadPortraitUrls);
+            sequencePreloadLandscapeUrls = EnsurePreloadUrls(true, sequencePreloadLandscapeUrls, landscapeCount);
+            sequencePreloadPortraitUrls = EnsurePreloadUrls(false, sequencePreloadPortraitUrls, portraitCount);
+            sequencePreloadOrderedUrls = MergePreloadUrls(sequencePreloadLandscapeUrls, sequencePreloadPortraitUrls);
         }
 
         private VRCUrl[] BuildOrderedPreloadUrls(int landscapeCount, int portraitCount)
@@ -2207,40 +2150,6 @@ namespace RemotePhotoSystem
             return selected;
         }
 
-        private void AdvanceActualCursorAfterSelection(bool landscape, VRCUrl selectedUrl)
-        {
-            int poolCount = landscape ? GetLandscapeCount() : GetPortraitCount();
-            if (poolCount <= 0 || !RemotePhotoUrlUtility.IsValidVrcUrl(selectedUrl))
-            {
-                return;
-            }
-
-            string selected = GetSafeUrlString(selectedUrl);
-            int index = 0;
-            while (index < poolCount)
-            {
-                VRCUrl url = landscape ? GetLandscapeUrl(index) : GetPortraitUrl(index);
-                if (GetSafeUrlString(url) == selected)
-                {
-                    int direction = configuredPlayMode == RemotePhotoPlayMode.SequenceReverse ? -1 : 1;
-                    if (landscape)
-                    {
-                        nextLandscapeIndex = PositiveModulo(index + direction, poolCount);
-                        sequenceLandscapeInitialized = true;
-                    }
-                    else
-                    {
-                        nextPortraitIndex = PositiveModulo(index + direction, poolCount);
-                        sequencePortraitInitialized = true;
-                    }
-
-                    return;
-                }
-
-                index++;
-            }
-        }
-
         private VRCUrl BuildActualRandomUrl(bool landscape, VRCUrl[] existing, int existingLength)
         {
             int poolCount = landscape ? GetLandscapeCount() : GetPortraitCount();
@@ -2255,7 +2164,11 @@ namespace RemotePhotoSystem
             {
                 int poolIndex = PositiveModulo(start + guard, poolCount);
                 VRCUrl url = landscape ? GetLandscapeUrl(poolIndex) : GetPortraitUrl(poolIndex);
-                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && !ContainsUrl(existing, existingLength, url))
+                string urlString = GetSafeUrlString(url);
+                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    !ContainsUrl(existing, existingLength, url) &&
+                    !IsCurrentSyncedUrlString(urlString) &&
+                    !IsDisplayedUrlString(urlString))
                 {
                     return url;
                 }
@@ -2342,18 +2255,6 @@ namespace RemotePhotoSystem
             }
 
             return null;
-        }
-
-        private void CommitSequencePageCursor(bool landscape, int pageCount)
-        {
-            if (landscape)
-            {
-                sequenceLandscapeInitialized = true;
-            }
-            else
-            {
-                sequencePortraitInitialized = true;
-            }
         }
 
         private VRCUrl BuildNextActualSequentialUrl(bool landscape)
@@ -2639,31 +2540,6 @@ namespace RemotePhotoSystem
             return null;
         }
 
-        private VRCUrl BuildReplacementLandscapeUrl()
-        {
-            if (configuredPlayMode == RemotePhotoPlayMode.Random)
-            {
-                return BuildRandomUrl(true, preloadLandscapeUrls, preloadLandscapeUrls == null ? 0 : preloadLandscapeUrls.Length);
-            }
-
-            return BuildSequentialReplacementUrl(true);
-        }
-
-        private VRCUrl BuildReplacementPortraitUrl()
-        {
-            if (configuredPlayMode == RemotePhotoPlayMode.Random)
-            {
-                return BuildRandomUrl(false, preloadPortraitUrls, preloadPortraitUrls == null ? 0 : preloadPortraitUrls.Length);
-            }
-
-            return BuildSequentialReplacementUrl(false);
-        }
-
-        private VRCUrl BuildSequentialReplacementUrl(bool landscape)
-        {
-            return BuildNextPredictedSequentialUrl(landscape);
-        }
-
         private int GetDesiredPrepareCount(bool landscape, int requestedCount, int poolCount)
         {
             if (poolCount <= 0)
@@ -2757,106 +2633,11 @@ namespace RemotePhotoSystem
             _preloadScanOrientation = 0;
             _preloadScanIndex = 0;
             _preloadScanOrderedIndex = 0;
-            _activePreloadOrderedIndex = -1;
         }
 
-        private void RemovePreloadUrl(VRCUrl url)
-        {
-            if (!Networking.IsOwner(gameObject))
-            {
-                return;
-            }
+        #endregion
 
-            preloadOrderedUrls = RemoveUrlFromArray(preloadOrderedUrls, url);
-            preloadLandscapeUrls = RemoveUrlFromArray(preloadLandscapeUrls, url);
-            preloadPortraitUrls = RemoveUrlFromArray(preloadPortraitUrls, url);
-            preloadRevision++;
-            RequestSerialization();
-        }
-
-        private VRCUrl[] RemoveUrlFromArray(VRCUrl[] source, VRCUrl url)
-        {
-            string urlString = GetSafeUrlString(url);
-            if (source == null || source.Length == 0 || string.IsNullOrEmpty(urlString))
-            {
-                return source == null ? new VRCUrl[0] : source;
-            }
-
-            int keepCount = 0;
-            int index = 0;
-            while (index < source.Length)
-            {
-                if (GetSafeUrlString(source[index]) != urlString)
-                {
-                    keepCount++;
-                }
-
-                index++;
-            }
-
-            if (keepCount == source.Length)
-            {
-                return source;
-            }
-
-            VRCUrl[] result = new VRCUrl[keepCount];
-            int writeIndex = 0;
-            index = 0;
-            while (index < source.Length)
-            {
-                if (GetSafeUrlString(source[index]) != urlString)
-                {
-                    result[writeIndex] = source[index];
-                    writeIndex++;
-                }
-
-                index++;
-            }
-
-            return result;
-        }
-
-        private VRCUrl[] RemoveUrlAtIndex(VRCUrl[] source, int removeIndex)
-        {
-            if (source == null || source.Length == 0 || removeIndex < 0 || removeIndex >= source.Length)
-            {
-                return source == null ? new VRCUrl[0] : source;
-            }
-
-            VRCUrl[] result = new VRCUrl[source.Length - 1];
-            int sourceIndex = 0;
-            int writeIndex = 0;
-            while (sourceIndex < source.Length)
-            {
-                if (sourceIndex != removeIndex)
-                {
-                    result[writeIndex] = source[sourceIndex];
-                    writeIndex++;
-                }
-
-                sourceIndex++;
-            }
-
-            return result;
-        }
-
-        private VRCUrl[] RemoveFirstUrlFromArray(VRCUrl[] source)
-        {
-            if (source == null || source.Length <= 1)
-            {
-                return new VRCUrl[0];
-            }
-
-            VRCUrl[] result = new VRCUrl[source.Length - 1];
-            int index = 1;
-            while (index < source.Length)
-            {
-                result[index - 1] = source[index];
-                index++;
-            }
-
-            return result;
-        }
+        #region Diagnostics
 
         public void LogDebug(string message)
         {
@@ -2870,6 +2651,10 @@ namespace RemotePhotoSystem
         {
             return IsPreloadEnabled() ? "Preload" : "NonPreload";
         }
+
+        #endregion
+
+        #region Cache And Utility Methods
 
         private void EnsureCacheArrays()
         {
@@ -2941,7 +2726,7 @@ namespace RemotePhotoSystem
                     string urlString = GetSafeUrlString(url);
                     if (target != null &&
                         RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
-                        !IsDisplayedUrlString(urlString))
+                        !IsFrameDisplayingUrl(target, urlString))
                     {
                         count++;
                     }
@@ -3092,6 +2877,15 @@ namespace RemotePhotoSystem
             }
 
             return false;
+        }
+
+        private bool IsFrameDisplayingUrl(RemotePhotoFrame frame, string urlString)
+        {
+            int index = FindDisplayedFrameIndex(frame);
+            return index >= 0 &&
+                _displayedUrlStrings != null &&
+                index < _displayedUrlStrings.Length &&
+                _displayedUrlStrings[index] == urlString;
         }
 
         private int FindDisplayedFrameIndex(RemotePhotoFrame frame)
@@ -3431,6 +3225,10 @@ namespace RemotePhotoSystem
             return false;
         }
 
+        #endregion
+
+        #region Ownership And Managed Groups
+
         public bool ContainsManagedGroup(RemotePhotoGroup group)
         {
             return GetManagedGroupIndex(group) >= 0;
@@ -3481,6 +3279,10 @@ namespace RemotePhotoSystem
                 index++;
             }
         }
+
+        #endregion
+
+        #region Low Level Helpers
 
         private string GetSafeUrlString(VRCUrl url)
         {
@@ -3533,5 +3335,7 @@ namespace RemotePhotoSystem
 
             return result;
         }
+
+        #endregion
     }
 }

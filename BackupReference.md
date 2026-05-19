@@ -520,21 +520,20 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Load Once on Start refactored according to GUIDE
+    summary: Load Once Preload current-page completion fix
     files_changed:
       - Scripts/Runtime/RemotePhotoManager.cs
       - Scripts/Runtime/RemotePhotoGroup.cs
       - Scripts/Runtime/RemotePhotoManager.asset
       - Scripts/Runtime/RemotePhotoGroup.asset
     behavior_changes:
-      - Load Once no longer uses button trigger paths
-      - Manager creates startup selection only on Master
-      - Group creates formal selection/session for startup loading
-      - startup selection uses syncedUrls and syncedLoadOrderSlots
-      - startup selection assigns syncedSlotRequestIds for Random Preload validation
-      - Load Once startup selection is forced to apply in Group.targets order through selectionSequentialApply
-      - user interaction before or during startup loading invalidates old Load Once sessions
-      - Preload current-demand scan no longer skips non-focus Groups, so startup pages from multiple Groups remain eligible for download
+      - Manager now checks whether each specific Frame is displaying its assigned current synced URL
+      - current synced pages are not considered complete just because the same URL is displayed by another Frame
+      - future ReadyPool filling is paused while any current synced Frame still has not displayed its assigned URL
+      - cache consumption wakes the preload queue so remaining current synced Frames continue to receive priority
+      - Random direct selection avoids current synced URLs and displayed URLs before falling back
+      - Sequence preload synced fields were renamed to sequencePreloadLandscapeUrls, sequencePreloadPortraitUrls, and sequencePreloadOrderedUrls
+      - Manager runtime methods were reorganized into regions and dead preload helper code was removed
     verification:
       dotnet_build: passed
       diff_check: passed
@@ -543,10 +542,10 @@ codex_project_backup:
         - existing QuickBrown LuraSwitch2 SwitchBase unused field warning
     pending_runtime_tests:
       - UdonSharp compile in Unity after serialized Udon asset refresh
-      - Load Once Random Preload startup order
-      - Load Once SequenceForward and SequenceReverse page 0 startup order
-      - Load Once multi-Group startup current-demand download order
-      - startup loading interrupted by player trigger
+      - Load Once Random Preload fills all managed Frames before future ReadyPool storage
+      - multi-Group startup with duplicate URLs
+      - Random Preload ReadyPool refill after current synced pages finish
+      - Sequence Preload after renamed synced fields
       - late joiner applying already synced Load Once selection
 
   external_references:

@@ -525,7 +525,7 @@ namespace RemotePhotoSystem
 
             if (triggerAction == TriggerActionRandom)
             {
-                if (!FillRandomSelectionInTargetOrder(landscapeCount, portraitCount))
+                if (!FillGallerySelectionInTargetOrder(landscapeCount, portraitCount))
                 {
                     return false;
                 }
@@ -563,16 +563,6 @@ namespace RemotePhotoSystem
             }
 
             return "Next";
-        }
-
-        private bool FillRandomSelectionInTargetOrder(int landscapeCount, int portraitCount)
-        {
-            if (!FillGallerySelectionInTargetOrder(landscapeCount, portraitCount))
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private int CountTargetSlots(RemotePhotoOrientation orientation)
