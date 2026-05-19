@@ -44,17 +44,21 @@ namespace RemotePhotoSystem
         private int _activeFitMode;
         private int _activeRetryCount;
         private int _activeSelectionRevision = NoSelectionRevision;
+        private int _activeSessionId = NoSelectionRevision;
         private RemotePhotoManager _activeManager;
         private RemotePhotoGroup _activeGroup;
         private int _activeSlotIndex = -1;
         private int _activeRequestSerial;
         private int _currentDownloadSelectionRevision = NoSelectionRevision;
+        private int _currentDownloadSessionId = NoSelectionRevision;
         private RemotePhotoGroup _currentDownloadGroup;
         private int _currentDownloadSlotIndex = -1;
         private int _currentDownloadRequestSerial;
         private int _pendingRetryRevision = NoSelectionRevision;
+        private int _pendingRetrySessionId = NoSelectionRevision;
         private int _pendingRetrySerial;
         private int _pendingGalleryCacheRevision = NoSelectionRevision;
+        private int _pendingGalleryCacheSessionId = NoSelectionRevision;
         private int _pendingGalleryCacheSerial;
         private RemotePhotoManager _displayHandleManager;
         private float _resolvedFrameAspectRatio = 1.7777778f;
@@ -109,20 +113,31 @@ namespace RemotePhotoSystem
 
         public void LoadPhotoFromManager(VRCUrl url, RemotePhotoManager manager, int selectionRevision)
         {
-            LoadPhotoFromManagerSlot(url, manager, selectionRevision, null, -1, 0);
+            LoadPhotoFromManagerSlot(url, manager, selectionRevision, selectionRevision, null, -1, 0);
         }
 
         public void ApplyManagerTexture(Texture texture, RemotePhotoManager manager)
         {
+            ApplyManagerTextureForSelection(texture, manager, null, NoSelectionRevision, NoSelectionRevision, null, -1, 0);
+        }
+
+        public void ApplyManagerTextureForSelection(Texture texture, RemotePhotoManager manager, VRCUrl url, int selectionRevision, int sessionId, RemotePhotoGroup group, int slotIndex, int requestSerial)
+        {
             _activeManager = manager;
-            _activeGroup = null;
-            _activeSlotIndex = -1;
-            _activeRequestSerial = 0;
+            _activeGroup = group;
+            _activeSlotIndex = slotIndex;
+            _activeRequestSerial = requestSerial;
+            _activeSelectionRevision = selectionRevision;
+            _activeSessionId = sessionId;
+            _activeVrcUrl = url;
+            _activeUrl = RemotePhotoUrlUtility.IsValidVrcUrl(url) ? url.Get() : string.Empty;
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
+            _pendingGalleryCacheSessionId = NoSelectionRevision;
             _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
 
             if (_runtimeMaterial == null)
@@ -141,14 +156,16 @@ namespace RemotePhotoSystem
             ApplyTexture(texture, _activeFitMode);
             _displayHandleManager = manager;
             DisposeDownload(previousDirectDownload);
+            NotifyGroupDisplayFinished();
         }
 
-        public void LoadPhotoFromManagerSlot(VRCUrl url, RemotePhotoManager manager, int selectionRevision, RemotePhotoGroup group, int slotIndex, int requestSerial)
+        public void LoadPhotoFromManagerSlot(VRCUrl url, RemotePhotoManager manager, int selectionRevision, int sessionId, RemotePhotoGroup group, int slotIndex, int requestSerial)
         {
             _activeManager = manager;
             _activeGroup = group;
             _activeSlotIndex = slotIndex;
             _activeRequestSerial = requestSerial;
+            _activeSessionId = sessionId;
 
             if (_runtimeMaterial == null)
             {
@@ -157,10 +174,16 @@ namespace RemotePhotoSystem
 
             if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
                 selectionRevision == _activeSelectionRevision &&
+                sessionId == _activeSessionId &&
                 url.Get() == _activeUrl)
             {
                 if (manager != null && !manager.IsPreloadEnabled() && _currentDownload != null)
                 {
+                    _activeSelectionRevision = _currentDownloadSelectionRevision;
+                    _activeSessionId = _currentDownloadSessionId;
+                    _activeGroup = _currentDownloadGroup;
+                    _activeSlotIndex = _currentDownloadSlotIndex;
+                    _activeRequestSerial = _currentDownloadRequestSerial;
                     return;
                 }
 
@@ -175,6 +198,7 @@ namespace RemotePhotoSystem
                 else
                 {
                     _pendingGalleryCacheRevision = selectionRevision;
+                    _pendingGalleryCacheSessionId = sessionId;
                     _pendingGalleryCacheSerial = requestSerial;
                     SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
                 }
@@ -183,6 +207,7 @@ namespace RemotePhotoSystem
             }
 
             _activeSelectionRevision = selectionRevision;
+            _activeSessionId = sessionId;
 
             if (!RemotePhotoUrlUtility.IsValidVrcUrl(url))
             {
@@ -190,9 +215,11 @@ namespace RemotePhotoSystem
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
                 _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySessionId = NoSelectionRevision;
                 _pendingRetrySerial = 0;
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
+                _pendingGalleryCacheSessionId = NoSelectionRevision;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
                 CancelCurrentDownload();
@@ -215,9 +242,11 @@ namespace RemotePhotoSystem
                     _activeUrl = url.Get();
                     _pendingRetryUrl = string.Empty;
                     _pendingRetryRevision = NoSelectionRevision;
+                    _pendingRetrySessionId = NoSelectionRevision;
                     _pendingRetrySerial = 0;
                     _pendingGalleryCacheUrl = string.Empty;
                     _pendingGalleryCacheRevision = NoSelectionRevision;
+                    _pendingGalleryCacheSessionId = NoSelectionRevision;
                     _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                     _activeRetryCount = 0;
                     LogDownload("Cache hit: " + gameObject.name + " -> " + _activeUrl);
@@ -241,9 +270,11 @@ namespace RemotePhotoSystem
                 _activeUrl = url.Get();
                 _pendingRetryUrl = string.Empty;
                 _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySessionId = NoSelectionRevision;
                 _pendingRetrySerial = 0;
                 _pendingGalleryCacheUrl = _activeUrl;
                 _pendingGalleryCacheRevision = selectionRevision;
+                _pendingGalleryCacheSessionId = sessionId;
                 _pendingGalleryCacheSerial = requestSerial;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
@@ -257,7 +288,7 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            BeginDemandLoad(url, manager, selectionRevision, group, slotIndex, requestSerial);
+            BeginDemandLoadWithSession(url, manager, selectionRevision, sessionId, group, slotIndex, requestSerial);
         }
 
         public void ClearPhoto()
@@ -266,14 +297,17 @@ namespace RemotePhotoSystem
             _activeUrl = string.Empty;
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
+            _pendingGalleryCacheSessionId = NoSelectionRevision;
             _activeManager = null;
             _activeGroup = null;
             _activeSlotIndex = -1;
             _activeRequestSerial = 0;
             _activeSelectionRevision = NoSelectionRevision;
+            _activeSessionId = NoSelectionRevision;
             _activeRetryCount = 0;
             CancelCurrentDownload();
             ApplyFallback();
@@ -286,6 +320,7 @@ namespace RemotePhotoSystem
             if (_activeManager == null ||
                 _pendingGalleryCacheUrl != _activeUrl ||
                 _pendingGalleryCacheRevision != _activeSelectionRevision ||
+                _pendingGalleryCacheSessionId != _activeSessionId ||
                 _pendingGalleryCacheSerial != _activeRequestSerial ||
                 !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
             {
@@ -317,6 +352,7 @@ namespace RemotePhotoSystem
                 LogDownload("Manager queue image ready: " + gameObject.name + " -> " + _activeUrl);
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
+                _pendingGalleryCacheSessionId = NoSelectionRevision;
                 ApplyTexture(cachedTexture, _activeFitMode);
                 if (_activeManager.configuredPlayMode == RemotePhotoPlayMode.Random)
                 {
@@ -338,6 +374,7 @@ namespace RemotePhotoSystem
                 LogDownload("Manager queue image failed: " + gameObject.name + " -> " + _activeUrl);
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
+                _pendingGalleryCacheSessionId = NoSelectionRevision;
                 ApplyFallback();
                 ReleaseDisplayedManagerDownloadIfFallbackApplied();
                 ReleaseDisplayedDirectDownloadIfFallbackApplied();
@@ -361,9 +398,11 @@ namespace RemotePhotoSystem
             _activeRetryCount = 0;
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
+            _pendingGalleryCacheSessionId = NoSelectionRevision;
             LogDownload("Download success: " + gameObject.name + " Revision=" + _activeSelectionRevision + " Slot=" + _activeSlotIndex + " Serial=" + _activeRequestSerial + " -> " + _activeUrl);
 
             ApplyTexture(result.Result, _activeFitMode);
@@ -385,6 +424,7 @@ namespace RemotePhotoSystem
             {
                 _pendingRetryUrl = string.Empty;
                 _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySessionId = NoSelectionRevision;
                 _pendingRetrySerial = 0;
                 LogDownload("Download non-retryable error, applying fallback: " + gameObject.name + " -> " + _activeUrl);
                 ApplyFallback();
@@ -400,6 +440,7 @@ namespace RemotePhotoSystem
                 _activeRetryCount++;
                 _pendingRetryUrl = _activeUrl;
                 _pendingRetryRevision = _activeSelectionRevision;
+                _pendingRetrySessionId = _activeSessionId;
                 _pendingRetrySerial = _activeRequestSerial;
                 float retryDelay = GetImageRetryDelaySeconds();
                 LogDownload("Download retry " + _activeRetryCount + "/" + maxRetryAttempts + " in " + retryDelay + "s: " + gameObject.name + " -> " + _activeUrl);
@@ -409,6 +450,7 @@ namespace RemotePhotoSystem
 
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             LogDownload("Download gave up, applying fallback: " + gameObject.name + " -> " + _activeUrl);
             ApplyFallback();
@@ -421,6 +463,7 @@ namespace RemotePhotoSystem
         {
             if (_pendingRetryUrl != _activeUrl ||
                 _pendingRetryRevision != _activeSelectionRevision ||
+                _pendingRetrySessionId != _activeSessionId ||
                 _pendingRetrySerial != _activeRequestSerial ||
                 !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
             {
@@ -430,6 +473,7 @@ namespace RemotePhotoSystem
 
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             LogDownload("Download retry start: " + gameObject.name + " -> " + _activeUrl);
             StartActiveDownload();
@@ -511,6 +555,7 @@ namespace RemotePhotoSystem
             }
 
             _currentDownloadSelectionRevision = NoSelectionRevision;
+            _currentDownloadSessionId = NoSelectionRevision;
             _currentDownloadGroup = null;
             _currentDownloadSlotIndex = -1;
             _currentDownloadRequestSerial = 0;
@@ -544,7 +589,7 @@ namespace RemotePhotoSystem
         {
             if (_activeGroup != null)
             {
-                _activeGroup.NotifyFrameDisplayFinished(_activeSlotIndex, _activeSelectionRevision, _activeRequestSerial);
+                _activeGroup.NotifyFrameDisplayFinished(_activeSlotIndex, _activeSelectionRevision, _activeSessionId, _activeRequestSerial);
             }
         }
 
@@ -559,6 +604,7 @@ namespace RemotePhotoSystem
             }
 
             if (_currentDownloadSelectionRevision != _activeSelectionRevision ||
+                _currentDownloadSessionId != _activeSessionId ||
                 _currentDownloadGroup != _activeGroup ||
                 _currentDownloadSlotIndex != _activeSlotIndex ||
                 _currentDownloadRequestSerial != _activeRequestSerial)
@@ -612,6 +658,7 @@ namespace RemotePhotoSystem
             _textureInfo.WrapModeV = _textureInfo.WrapModeU;
 
             _currentDownloadSelectionRevision = _activeSelectionRevision;
+            _currentDownloadSessionId = _activeSessionId;
             _currentDownloadGroup = _activeGroup;
             _currentDownloadSlotIndex = _activeSlotIndex;
             _currentDownloadRequestSerial = _activeRequestSerial;
@@ -620,11 +667,17 @@ namespace RemotePhotoSystem
 
         private void BeginDemandLoad(VRCUrl url, RemotePhotoManager manager, int selectionRevision, RemotePhotoGroup group, int slotIndex, int requestSerial)
         {
+            BeginDemandLoadWithSession(url, manager, selectionRevision, selectionRevision, group, slotIndex, requestSerial);
+        }
+
+        private void BeginDemandLoadWithSession(VRCUrl url, RemotePhotoManager manager, int selectionRevision, int sessionId, RemotePhotoGroup group, int slotIndex, int requestSerial)
+        {
             _activeManager = manager;
             _activeGroup = group;
             _activeSlotIndex = slotIndex;
             _activeRequestSerial = requestSerial;
             _activeSelectionRevision = selectionRevision;
+            _activeSessionId = sessionId;
 
             if (_runtimeMaterial == null)
             {
@@ -638,9 +691,11 @@ namespace RemotePhotoSystem
                 _activeUrl = string.Empty;
                 _pendingRetryUrl = string.Empty;
                 _pendingRetryRevision = NoSelectionRevision;
+                _pendingRetrySessionId = NoSelectionRevision;
                 _pendingRetrySerial = 0;
                 _pendingGalleryCacheUrl = string.Empty;
                 _pendingGalleryCacheRevision = NoSelectionRevision;
+                _pendingGalleryCacheSessionId = NoSelectionRevision;
                 _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
                 _activeRetryCount = 0;
                 ApplyFallback();
@@ -656,9 +711,11 @@ namespace RemotePhotoSystem
             _activeUrl = url.Get();
             _pendingRetryUrl = string.Empty;
             _pendingRetryRevision = NoSelectionRevision;
+            _pendingRetrySessionId = NoSelectionRevision;
             _pendingRetrySerial = 0;
             _pendingGalleryCacheUrl = string.Empty;
             _pendingGalleryCacheRevision = NoSelectionRevision;
+            _pendingGalleryCacheSessionId = NoSelectionRevision;
             _activeFitMode = RemotePhotoFitModeUtility.ToInt(photoFitMode);
             _activeRetryCount = 0;
 

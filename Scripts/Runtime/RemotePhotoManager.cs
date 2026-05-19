@@ -314,9 +314,8 @@ namespace RemotePhotoSystem
 
             if (_activeRandomRequestActive)
             {
-                lastPreloadStatus = "Random request is already active.";
-                LogDebug("Random request rejected because another request is active.");
-                return false;
+                LogDebug("Random request replaced by newer valid intent.");
+                CancelActiveRandomRequest();
             }
 
             if (GetManagedGroupIndex(group) < 0)
@@ -519,6 +518,16 @@ namespace RemotePhotoSystem
             _activeRandomRequestId = 0;
             _activeRandomNextSlotIndex = 0;
             lastPreloadStatus = "Random request completed.";
+        }
+
+        private void CancelActiveRandomRequest()
+        {
+            _activeRandomRequestActive = false;
+            _activeRandomGroup = null;
+            _activeRandomSlots = new int[0];
+            _activeRandomRequestId = 0;
+            _activeRandomNextSlotIndex = 0;
+            lastPreloadStatus = "Random request replaced.";
         }
 
         private void CancelPreloadIfActiveRandomNeedsPriority()
@@ -1937,36 +1946,6 @@ namespace RemotePhotoSystem
                 }
 
                 groupIndex++;
-            }
-
-            int existingIndex = 0;
-            while (preloadOrderedUrls != null && existingIndex < preloadOrderedUrls.Length && filled < desiredTotal)
-            {
-                VRCUrl existingUrl = preloadOrderedUrls[existingIndex];
-                string existingUrlString = GetSafeUrlString(existingUrl);
-                if (RemotePhotoUrlUtility.IsValidVrcUrl(existingUrl) &&
-                    !IsDisplayedUrlString(existingUrlString) &&
-                    !ContainsUrl(result, filled, existingUrl))
-                {
-                    bool landscape = IsUrlInOrientationPool(true, existingUrl);
-                    bool portrait = IsUrlInOrientationPool(false, existingUrl);
-                    bool canFill = landscape ? landscapeFilled < landscapeCount : portrait && portraitFilled < portraitCount;
-                    if (canFill)
-                    {
-                        result[filled] = existingUrl;
-                        filled++;
-                        if (landscape)
-                        {
-                            landscapeFilled++;
-                        }
-                        else
-                        {
-                            portraitFilled++;
-                        }
-                    }
-                }
-
-                existingIndex++;
             }
 
             groupIndex = 0;

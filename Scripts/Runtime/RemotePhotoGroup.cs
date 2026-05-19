@@ -20,15 +20,19 @@ namespace RemotePhotoSystem
         [UdonSynced] public int[] syncedLoadOrderSlots = new int[0];
         [UdonSynced] public int[] syncedSlotRequestIds = new int[0];
         [UdonSynced] public int selectionRevision;
+        [UdonSynced] public int selectionSessionId;
         [UdonSynced] public int loadOrderRevision;
         [UdonSynced] public double nextAllowedTriggerServerTime;
 
         [HideInInspector] public string lastTriggerError = string.Empty;
 
         private int _activeDisplayRevision = -1;
+        private int _activeDisplaySessionId = -1;
         private int _activeDisplayOrderIndex;
         private int _activeDisplaySerial;
         private bool _activeDisplaySequential;
+        private int _lastAppliedRevision = -1;
+        private int _lastAppliedSignature;
 
         public void Start()
         {
@@ -107,7 +111,7 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            if (!CanPassTriggerCooldown())
+            if (triggerAction == TriggerActionRandom && !CanPassTriggerCooldown())
             {
                 return;
             }
@@ -163,7 +167,11 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            MarkTriggerCooldown();
+            if (triggerAction == TriggerActionRandom)
+            {
+                MarkTriggerCooldown();
+            }
+
             manager.NotifySelectionStateChanged();
             RequestSerialization();
             ApplyCurrentSelection();
@@ -366,9 +374,11 @@ namespace RemotePhotoSystem
         {
             EnsureSyncedArrays();
             selectionRevision++;
+            selectionSessionId = selectionRevision;
             loadOrderRevision = selectionRevision;
             ResetSelectionPairs();
             _activeDisplayRevision = selectionRevision;
+            _activeDisplaySessionId = selectionSessionId;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
             _activeDisplaySequential = false;
@@ -406,7 +416,7 @@ namespace RemotePhotoSystem
 
             syncedSlotRequestIds[slotIndex] = selectionRevision;
             loadOrderRevision = selectionRevision;
-            targets[slotIndex].ApplyManagerTexture(texture, sourceManager);
+            targets[slotIndex].ApplyManagerTextureForSelection(texture, sourceManager, url, selectionRevision, selectionSessionId, this, slotIndex, _activeDisplaySerial);
             RequestSerialization();
             return true;
         }
@@ -447,6 +457,7 @@ namespace RemotePhotoSystem
             }
 
             selectionRevision++;
+            selectionSessionId = selectionRevision;
             loadOrderRevision = selectionRevision;
             return true;
         }
@@ -622,7 +633,21 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            int signature = BuildSelectionSignature();
+            if (selectionRevision < _lastAppliedRevision)
+            {
+                return;
+            }
+
+            if (selectionRevision == _lastAppliedRevision && signature == _lastAppliedSignature)
+            {
+                return;
+            }
+
+            _lastAppliedRevision = selectionRevision;
+            _lastAppliedSignature = signature;
             _activeDisplayRevision = selectionRevision;
+            _activeDisplaySessionId = selectionSessionId <= 0 ? selectionRevision : selectionSessionId;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
             _activeDisplaySequential = ShouldApplySelectionSequential();
@@ -640,14 +665,16 @@ namespace RemotePhotoSystem
             return manager != null && !manager.IsPreloadEnabled();
         }
 
-        public void NotifyFrameDisplayFinished(int slotIndex, int revision, int requestSerial)
+        public void NotifyFrameDisplayFinished(int slotIndex, int revision, int sessionId, int requestSerial)
         {
             if (!_activeDisplaySequential)
             {
                 return;
             }
 
-            if (revision != _activeDisplayRevision || requestSerial != _activeDisplaySerial)
+            if (revision != _activeDisplayRevision ||
+                sessionId != _activeDisplaySessionId ||
+                requestSerial != _activeDisplaySerial)
             {
                 return;
             }
@@ -689,7 +716,7 @@ namespace RemotePhotoSystem
                 }
 
                 LogDebug("Selection apply: group=" + gameObject.name + ", revision=" + selectionRevision + ", pair=" + _activeDisplayOrderIndex + ", slot=" + slot + ", frame=" + target.gameObject.name + ", url=" + url.Get());
-                target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, this, slot, _activeDisplaySerial);
+                target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, _activeDisplaySessionId, this, slot, _activeDisplaySerial);
                 return;
             }
 
@@ -715,7 +742,7 @@ namespace RemotePhotoSystem
                         if (RemotePhotoUrlUtility.IsValidVrcUrl(url))
                         {
                             LogDebug("Selection apply: group=" + gameObject.name + ", revision=" + selectionRevision + ", pair=" + orderIndex + ", slot=" + slot + ", frame=" + target.gameObject.name + ", url=" + url.Get());
-                            target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, this, slot, _activeDisplaySerial);
+                            target.LoadPhotoFromManagerSlot(url, manager, selectionRevision, _activeDisplaySessionId, this, slot, _activeDisplaySerial);
                         }
                     }
                 }
@@ -870,6 +897,24 @@ namespace RemotePhotoSystem
             }
 
             return false;
+        }
+
+        private int BuildSelectionSignature()
+        {
+            int signature = selectionRevision * 31 + selectionSessionId;
+            int index = 0;
+            while (syncedUrls != null && index < syncedUrls.Length)
+            {
+                string url = syncedUrls[index] == null ? string.Empty : syncedUrls[index].Get();
+                int slot = syncedLoadOrderSlots == null || index >= syncedLoadOrderSlots.Length ? -1 : syncedLoadOrderSlots[index];
+                int slotRequest = syncedSlotRequestIds == null || slot < 0 || slot >= syncedSlotRequestIds.Length ? -1 : syncedSlotRequestIds[slot];
+                signature = signature * 33 + slot;
+                signature = signature * 33 + slotRequest;
+                signature = signature * 33 + url.Length;
+                index++;
+            }
+
+            return signature;
         }
 
         private void LogDebug(string message)
