@@ -367,10 +367,23 @@ codex_project_backup:
       - loadOnceOnStart
       - loadOnceDelaySeconds
     behavior:
-      - when enabled, Manager triggers every managed group once after configured delay
-      - Random play mode calls RemotePhotoGroup.TriggerRandom()
-      - SequenceForward and SequenceReverse call RemotePhotoGroup.TriggerNext() so the first page loads
-      - only Master executes startup loading requests
+      - Load Once is treated as an initial formal selection/session
+      - it no longer simulates button clicks
+      - it does not call TriggerRandom or TriggerNext
+      - only Master creates initial selections
+      - Remote clients only apply synced selection data
+      - each eligible Group runs Load Once at most once
+      - Groups already interacted with by users are skipped
+      - Groups that already have synced URLs are skipped
+      - startup selection writes syncedUrls, syncedLoadOrderSlots, syncedSlotRequestIds, selectionRevision, selectionSessionId, and loadOrderRevision
+      - startup selection does not consume Random trigger cooldown
+      - Random mode builds an immediate random selection in Group.targets order
+      - SequenceForward and SequenceReverse build page 0 using the current visual sort direction
+      - Load Once selections set selectionSequentialApply so all clients apply them in syncedLoadOrderSlots order
+      - normal Preload button selections remain parallel unless NonPreload forces serial display
+      - Preload current-demand download scans all current synced Groups instead of only the sequence focus Group
+      - old Load Once callbacks are rejected by selectionRevision, selectionSessionId, slot, and request serial checks
+      - if a player triggers a Group before Load Once runs, user interaction wins and Load Once skips that Group
 
   non_preload_design:
     enabled_by: RemotePhotoManager.loadingMode == NonPreload
@@ -507,19 +520,21 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Sequence mode refactored according to GUIDE
+    summary: Load Once on Start refactored according to GUIDE
     files_changed:
       - Scripts/Runtime/RemotePhotoManager.cs
       - Scripts/Runtime/RemotePhotoGroup.cs
-      - Scripts/Runtime/RemotePhotoFrame.cs
       - Scripts/Runtime/RemotePhotoManager.asset
+      - Scripts/Runtime/RemotePhotoGroup.asset
     behavior_changes:
-      - Sequence Previous and Next no longer wait for image loading
-      - Sequence pages are tracked per Group instead of by global cursor only
-      - Sequence preload follows the last interacted Group
-      - Sequence display is parallel rather than slot-serial
-      - Sequence cache is retained by URL and reused instead of consumed like Random ReadyPool
-      - Frame polling is avoided for Sequence; Manager refreshes Groups when cached URLs become available
+      - Load Once no longer uses button trigger paths
+      - Manager creates startup selection only on Master
+      - Group creates formal selection/session for startup loading
+      - startup selection uses syncedUrls and syncedLoadOrderSlots
+      - startup selection assigns syncedSlotRequestIds for Random Preload validation
+      - Load Once startup selection is forced to apply in Group.targets order through selectionSequentialApply
+      - user interaction before or during startup loading invalidates old Load Once sessions
+      - Preload current-demand scan no longer skips non-focus Groups, so startup pages from multiple Groups remain eligible for download
     verification:
       dotnet_build: passed
       diff_check: passed
@@ -528,9 +543,11 @@ codex_project_backup:
         - existing QuickBrown LuraSwitch2 SwitchBase unused field warning
     pending_runtime_tests:
       - UdonSharp compile in Unity after serialized Udon asset refresh
-      - SequenceForward and SequenceReverse rapid-click behavior in ClientSim or VRC
-      - mixed Landscape and Portrait Group page behavior
-      - multi-Group focus switching in Preload mode
+      - Load Once Random Preload startup order
+      - Load Once SequenceForward and SequenceReverse page 0 startup order
+      - Load Once multi-Group startup current-demand download order
+      - startup loading interrupted by player trigger
+      - late joiner applying already synced Load Once selection
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/

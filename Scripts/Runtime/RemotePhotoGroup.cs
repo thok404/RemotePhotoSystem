@@ -21,6 +21,7 @@ namespace RemotePhotoSystem
         [UdonSynced] public int[] syncedSlotRequestIds = new int[0];
         [UdonSynced] public int selectionRevision;
         [UdonSynced] public int selectionSessionId;
+        [UdonSynced] public bool selectionSequentialApply;
         [UdonSynced] public int loadOrderRevision;
         [UdonSynced] public double nextAllowedTriggerServerTime;
 
@@ -33,6 +34,8 @@ namespace RemotePhotoSystem
         private bool _activeDisplaySequential;
         private int _lastAppliedRevision = -1;
         private int _lastAppliedSignature;
+        private bool _loadOnceApplied;
+        private bool _userInteracted;
 
         public void Start()
         {
@@ -97,6 +100,8 @@ namespace RemotePhotoSystem
             {
                 return;
             }
+
+            _userInteracted = true;
 
             if (manager == null)
             {
@@ -176,6 +181,86 @@ namespace RemotePhotoSystem
             RequestSerialization();
             ApplyCurrentSelection();
             manager.LogDebug("Group trigger applied: " + gameObject.name);
+        }
+
+        public bool HasLoadOnceRunnableTargets()
+        {
+            if (_loadOnceApplied || _userInteracted || targets == null || targets.Length == 0)
+            {
+                return false;
+            }
+
+            if (HasAnySyncedUrl())
+            {
+                return false;
+            }
+
+            int index = 0;
+            while (index < targets.Length)
+            {
+                if (targets[index] != null)
+                {
+                    return true;
+                }
+
+                index++;
+            }
+
+            return false;
+        }
+
+        public bool CreateLoadOnceSelectionFromManager()
+        {
+            lastTriggerError = string.Empty;
+
+            if (!Networking.IsMaster ||
+                manager == null ||
+                _loadOnceApplied ||
+                _userInteracted ||
+                HasAnySyncedUrl())
+            {
+                return false;
+            }
+
+            EnsureSyncedArrays();
+            if (!HasLoadOnceRunnableTargets())
+            {
+                return false;
+            }
+
+            if (!manager.ContainsManagedGroup(this))
+            {
+                lastTriggerError = "This group is not managed by its Remote Photo Manager.";
+                return false;
+            }
+
+            manager.ApplyBakedGallery();
+            if (!manager.HasGalleryData())
+            {
+                lastTriggerError = manager.lastGalleryError;
+                return false;
+            }
+
+            int landscapeCount = CountTargetSlots(RemotePhotoOrientation.Landscape);
+            int portraitCount = CountTargetSlots(RemotePhotoOrientation.Portrait);
+            RegisterPreloadDownloadMaterial();
+
+            int triggerAction = manager.configuredPlayMode == RemotePhotoPlayMode.Random
+                ? TriggerActionRandom
+                : TriggerActionNext;
+            if (!GenerateSelectionFromGallery(landscapeCount, portraitCount, triggerAction))
+            {
+                manager.LogDebug("[LoadOnce] Initial selection failed for group=" + gameObject.name + ": " + lastTriggerError);
+                return false;
+            }
+
+            _loadOnceApplied = true;
+            selectionSequentialApply = true;
+            manager.NotifySelectionStateChanged();
+            RequestSerialization();
+            ApplyCurrentSelection();
+            manager.LogDebug("[LoadOnce] Initial selection applied group=" + gameObject.name + ", revision=" + selectionRevision + ", session=" + selectionSessionId);
+            return true;
         }
 
         private void SendTriggerRequest(int triggerAction)
@@ -375,6 +460,7 @@ namespace RemotePhotoSystem
             EnsureSyncedArrays();
             selectionRevision++;
             selectionSessionId = selectionRevision;
+            selectionSequentialApply = false;
             loadOrderRevision = selectionRevision;
             ResetSelectionPairs();
             _activeDisplayRevision = selectionRevision;
@@ -458,7 +544,9 @@ namespace RemotePhotoSystem
 
             selectionRevision++;
             selectionSessionId = selectionRevision;
+            selectionSequentialApply = false;
             loadOrderRevision = selectionRevision;
+            MarkSelectionSlotsCurrent();
             return true;
         }
 
@@ -619,6 +707,26 @@ namespace RemotePhotoSystem
             return true;
         }
 
+        private void MarkSelectionSlotsCurrent()
+        {
+            if (syncedLoadOrderSlots == null || syncedSlotRequestIds == null)
+            {
+                return;
+            }
+
+            int index = 0;
+            while (index < syncedLoadOrderSlots.Length)
+            {
+                int slot = syncedLoadOrderSlots[index];
+                if (slot >= 0 && slot < syncedSlotRequestIds.Length)
+                {
+                    syncedSlotRequestIds[slot] = selectionRevision;
+                }
+
+                index++;
+            }
+        }
+
         private void ApplyCurrentSelection()
         {
             EnsureSyncedArrays();
@@ -650,7 +758,7 @@ namespace RemotePhotoSystem
             _activeDisplaySessionId = selectionSessionId <= 0 ? selectionRevision : selectionSessionId;
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
-            _activeDisplaySequential = ShouldApplySelectionSequential();
+            _activeDisplaySequential = selectionSequentialApply || ShouldApplySelectionSequential();
             if (_activeDisplaySequential)
             {
                 ApplyNextSelectionSlotInOrder();
@@ -902,6 +1010,7 @@ namespace RemotePhotoSystem
         private int BuildSelectionSignature()
         {
             int signature = selectionRevision * 31 + selectionSessionId;
+            signature = signature * 33 + (selectionSequentialApply ? 1 : 0);
             int index = 0;
             while (syncedUrls != null && index < syncedUrls.Length)
             {

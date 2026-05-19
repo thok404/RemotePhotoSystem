@@ -98,10 +98,15 @@ namespace RemotePhotoSystem
         private bool _activeRandomRequestActive;
         private int _nextReadyPoolGroupIndex;
         private int _nextReadyPoolTargetIndex;
+        private bool _loadOnceStarted;
+        private bool _loadOnceRetryScheduled;
+        private int _loadOnceRetryCount;
 
         private string[] _failedUrlStrings = new string[0];
         private const string PreloadTexturePropertyName = "_RemotePhotoPreloadTex";
         private const float PreloadDownloadIntervalSeconds = 5.1f;
+        private const float LoadOnceRetryDelaySeconds = 1f;
+        private const int MaxLoadOnceRetryCount = 10;
 
         public void Start()
         {
@@ -134,6 +139,7 @@ namespace RemotePhotoSystem
         public override void OnPlayerLeft(VRCPlayerApi player)
         {
             EnsureMasterOwnership();
+            TryRunLoadOnceOnStart();
         }
 
         public bool IsPreloadEnabled()
@@ -143,31 +149,78 @@ namespace RemotePhotoSystem
 
         public void _LoadOnceOnStart()
         {
-            if (!Networking.IsMaster || !loadOnceOnStart || managedGroups == null)
+            TryRunLoadOnceOnStart();
+        }
+
+        public void _RetryLoadOnceOnStart()
+        {
+            _loadOnceRetryScheduled = false;
+            TryRunLoadOnceOnStart();
+        }
+
+        public void TryRunLoadOnceOnStart()
+        {
+            if (!loadOnceOnStart || _loadOnceStarted)
+            {
+                return;
+            }
+
+            if (!Networking.IsMaster)
             {
                 return;
             }
 
             EnsureMasterOwnership();
+            if (!IsSystemReadyForInitialSelection())
+            {
+                ScheduleLoadOnceRetry();
+                return;
+            }
+
+            _loadOnceStarted = true;
             int index = 0;
             while (index < managedGroups.Length)
             {
                 RemotePhotoGroup group = managedGroups[index];
-                if (group != null)
+                if (group != null && group.CreateLoadOnceSelectionFromManager())
                 {
-                    LogDebug("Load once on start: " + group.gameObject.name);
-                    if (configuredPlayMode == RemotePhotoPlayMode.Random)
-                    {
-                        group.TriggerRandom();
-                    }
-                    else
-                    {
-                        group.TriggerNext();
-                    }
+                    LogDebug("[LoadOnce] CreateInitialSelection group=" + group.gameObject.name + ", mode=" + configuredPlayMode + ", preload=" + IsPreloadEnabled() + ", revision=" + group.selectionRevision);
                 }
 
                 index++;
             }
+        }
+
+        private bool IsSystemReadyForInitialSelection()
+        {
+            ApplyBakedGallery();
+            EnsureSequenceStateArrays();
+
+            if (!HasGalleryData())
+            {
+                LogDebug("[LoadOnce] Waiting for gallery data.");
+                return false;
+            }
+
+            if (managedGroups == null || managedGroups.Length == 0)
+            {
+                LogDebug("[LoadOnce] No managed groups.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ScheduleLoadOnceRetry()
+        {
+            if (_loadOnceRetryScheduled || _loadOnceRetryCount >= MaxLoadOnceRetryCount)
+            {
+                return;
+            }
+
+            _loadOnceRetryScheduled = true;
+            _loadOnceRetryCount++;
+            SendCustomEventDelayedSeconds(nameof(_RetryLoadOnceOnStart), LoadOnceRetryDelaySeconds);
         }
 
         public void OnDestroy()
@@ -634,12 +687,6 @@ namespace RemotePhotoSystem
             int groupIndex = 0;
             while (managedGroups != null && groupIndex < managedGroups.Length)
             {
-                if (ShouldSkipSequenceNonFocusGroup(groupIndex))
-                {
-                    groupIndex++;
-                    continue;
-                }
-
                 RemotePhotoGroup group = managedGroups[groupIndex];
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
                 int pairIndex = 0;
@@ -1786,12 +1833,6 @@ namespace RemotePhotoSystem
             int groupIndex = 0;
             while (managedGroups != null && groupIndex < managedGroups.Length)
             {
-                if (ShouldSkipSequenceNonFocusGroup(groupIndex))
-                {
-                    groupIndex++;
-                    continue;
-                }
-
                 RemotePhotoGroup group = managedGroups[groupIndex];
                 VRCUrl[] urls = group == null ? null : group.syncedUrls;
                 int index = 0;
