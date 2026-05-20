@@ -771,11 +771,11 @@ namespace RemotePhotoSystem
 
         public void NotifyFrameDisplayFinished(int slotIndex, int revision, int sessionId, int requestSerial)
         {
+
             if (!_activeDisplaySequential)
-                if (!_activeDisplaySequential)
-                {
-                    return;
-                }
+            {
+                return;
+            }
 
             if (revision != _activeDisplayRevision ||
                 sessionId != _activeDisplaySessionId ||
