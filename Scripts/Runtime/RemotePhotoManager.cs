@@ -834,6 +834,11 @@ namespace RemotePhotoSystem
             _cacheAccessTick++;
             _cachedAccessTicks[index] = _cacheAccessTick;
             MoveCachedDownloadToDisplayedFrame(frame, urlString, _cachedDownloads[index]);
+            if (IsCurrentSyncedUrlString(urlString) || !IsUrlInPreloadWindowString(urlString))
+            {
+                ClearCachedTextureWithoutDisposingAt(index);
+            }
+
             LogDebug("Cache retained by frame: " + urlString + ". Cached=" + GetCachedTextureCount() + "/" + GetMaxCachedTextures());
             StartPreloadingQueue();
         }
@@ -1208,7 +1213,7 @@ namespace RemotePhotoSystem
             }
 
             if (configuredPlayMode != RemotePhotoPlayMode.Random &&
-                CountCachedPreloadWindowUrls() >= GetMaxCachedTextures() &&
+                CountCachedPreloadWindowUrls() >= GetFutureCacheCapacity() &&
                 !HasUncachedCurrentSyncedUrl())
             {
                 FinishPreloadingQueue();
@@ -1370,10 +1375,14 @@ namespace RemotePhotoSystem
             while (sequencePreloadOrderedUrls != null && _preloadScanOrderedIndex < sequencePreloadOrderedUrls.Length)
             {
                 VRCUrl url = sequencePreloadOrderedUrls[_preloadScanOrderedIndex];
+                string urlString = GetSafeUrlString(url);
                 SetActivePreloadLocation(url);
                 _preloadScanOrderedIndex++;
 
-                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTextureQuiet(url) == null)
+                if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    !IsCurrentSyncedUrlString(urlString) &&
+                    !IsDisplayedUrlString(urlString) &&
+                    GetCachedTextureQuiet(url) == null)
                 {
                     return url;
                 }
@@ -1385,10 +1394,14 @@ namespace RemotePhotoSystem
                 while (source != null && _preloadScanIndex < source.Length)
                 {
                     VRCUrl url = source[_preloadScanIndex];
+                    string urlString = GetSafeUrlString(url);
                     _activePreloadLandscape = _preloadScanOrientation == 0;
                     _preloadScanIndex++;
 
-                    if (RemotePhotoUrlUtility.IsValidVrcUrl(url) && GetCachedTextureQuiet(url) == null)
+                    if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                        !IsCurrentSyncedUrlString(urlString) &&
+                        !IsDisplayedUrlString(urlString) &&
+                        GetCachedTextureQuiet(url) == null)
                     {
                         return url;
                     }
@@ -1429,8 +1442,8 @@ namespace RemotePhotoSystem
 
         private int FindNextReadyPoolOrientation()
         {
-            bool landscapeNeedsCache = CountReadyCachedUrls(true) < Mathf.Max(0, preloadLandscapeCacheSize) + GetStartupWarmupCount(true);
-            bool portraitNeedsCache = CountReadyCachedUrls(false) < Mathf.Max(0, preloadPortraitCacheSize) + GetStartupWarmupCount(false);
+            bool landscapeNeedsCache = CountReadyCachedUrls(true) < GetConfiguredPreloadCapacity(true);
+            bool portraitNeedsCache = CountReadyCachedUrls(false) < GetConfiguredPreloadCapacity(false);
             if (!landscapeNeedsCache && !portraitNeedsCache)
             {
                 return -1;
@@ -1511,7 +1524,7 @@ namespace RemotePhotoSystem
                 if (targets != null && slot >= 0 && slot < targets.Length && targets[slot] != null)
                 {
                     bool landscape = targets[slot].orientation == RemotePhotoOrientation.Landscape;
-                    return BuildRandomReadyPoolCandidate(landscape);
+                    return BuildRandomReadyPoolCandidate(landscape, true);
                 }
 
                 index++;
@@ -1522,16 +1535,16 @@ namespace RemotePhotoSystem
 
         private VRCUrl BuildRandomReadyPoolUrl(bool landscape)
         {
-            int limit = landscape ? Mathf.Max(0, preloadLandscapeCacheSize) + GetStartupWarmupCount(true) : Mathf.Max(0, preloadPortraitCacheSize) + GetStartupWarmupCount(false);
+            int limit = GetConfiguredPreloadCapacity(landscape);
             if (limit <= 0 || CountReadyCachedUrls(landscape) >= limit)
             {
                 return null;
             }
 
-            return BuildRandomReadyPoolCandidate(landscape);
+            return BuildRandomReadyPoolCandidate(landscape, false);
         }
 
-        private VRCUrl BuildRandomReadyPoolCandidate(bool landscape)
+        private VRCUrl BuildRandomReadyPoolCandidate(bool landscape, bool allowCurrentOrDisplayedFallback)
         {
             int poolCount = landscape ? GetLandscapeCount() : GetPortraitCount();
             if (poolCount <= 0)
@@ -1568,6 +1581,7 @@ namespace RemotePhotoSystem
                 if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
                     !IsKnownFailedUrl(url) &&
                     !IsReadyCachedUrlString(urlString) &&
+                    (allowCurrentOrDisplayedFallback || (!IsDisplayedUrlString(urlString) && !IsCurrentSyncedUrlString(urlString))) &&
                     _activePreloadUrlString != urlString)
                 {
                     return url;
@@ -1812,7 +1826,10 @@ namespace RemotePhotoSystem
             while (sequencePreloadOrderedUrls != null && index < sequencePreloadOrderedUrls.Length)
             {
                 VRCUrl url = sequencePreloadOrderedUrls[index];
+                string urlString = GetSafeUrlString(url);
                 if (RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    !IsCurrentSyncedUrlString(urlString) &&
+                    !IsDisplayedUrlString(urlString) &&
                     GetCachedTextureQuiet(url) != null)
                 {
                     count++;
@@ -1829,12 +1846,16 @@ namespace RemotePhotoSystem
             EnsureCacheArrays();
             int count = 0;
             int index = 0;
-            while (index < _cachedTextures.Length)
+            int limit = GetFutureCacheCapacity();
+            while (index < _cachedTextures.Length && index < limit)
             {
                 VRCUrl url = _cachedUrls == null || index >= _cachedUrls.Length ? null : _cachedUrls[index];
+                string urlString = _cachedUrlStrings == null || index >= _cachedUrlStrings.Length ? string.Empty : _cachedUrlStrings[index];
                 if (_cachedTextures[index] != null &&
                     _cachedDownloads[index] != null &&
                     RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    !IsCurrentSyncedUrlString(urlString) &&
+                    !IsDisplayedUrlString(urlString) &&
                     IsUrlInOrientationPool(landscape, url))
                 {
                     count++;
@@ -2551,8 +2572,7 @@ namespace RemotePhotoSystem
                 ? Mathf.Max(0, preloadLandscapeCacheSize)
                 : Mathf.Max(0, preloadPortraitCacheSize);
 
-            int warmupCount = GetStartupWarmupCount(landscape);
-            int desired = requestedCount + targetCount + warmupCount;
+            int desired = requestedCount + targetCount;
             if (desired <= 0)
             {
                 desired = 1;
@@ -2695,19 +2715,29 @@ namespace RemotePhotoSystem
 
         private int GetMaxCachedTextures()
         {
-            return Mathf.Max(0, preloadLandscapeCacheSize) +
-                   Mathf.Max(0, preloadPortraitCacheSize) +
-                   GetStartupWarmupCount(true) +
-                   GetStartupWarmupCount(false) +
-                   GetCurrentSyncedStagingCount();
+            return GetConfiguredPreloadCapacity() + GetTemporaryStagingCapacity();
         }
 
         private int GetFutureCacheCapacity()
         {
-            return Mathf.Max(0, preloadLandscapeCacheSize) +
-                   Mathf.Max(0, preloadPortraitCacheSize) +
-                   GetStartupWarmupCount(true) +
-                   GetStartupWarmupCount(false);
+            return GetConfiguredPreloadCapacity();
+        }
+
+        private int GetConfiguredPreloadCapacity()
+        {
+            return GetConfiguredPreloadCapacity(true) + GetConfiguredPreloadCapacity(false);
+        }
+
+        private int GetConfiguredPreloadCapacity(bool landscape)
+        {
+            return landscape ? Mathf.Max(0, preloadLandscapeCacheSize) : Mathf.Max(0, preloadPortraitCacheSize);
+        }
+
+        private int GetTemporaryStagingCapacity()
+        {
+            return GetStartupWarmupCount(true) +
+                   GetStartupWarmupCount(false) +
+                   GetCurrentSyncedStagingCount();
         }
 
         private int GetCurrentSyncedStagingCount()
@@ -3051,16 +3081,47 @@ namespace RemotePhotoSystem
             return -1;
         }
 
+        private int FindEmptyCacheIndexBetween(int start, int limit)
+        {
+            int maxLimit = GetMaxCachedTextures();
+            if (start < 0)
+            {
+                start = 0;
+            }
+
+            if (limit > maxLimit)
+            {
+                limit = maxLimit;
+            }
+
+            int index = start;
+            while (index < _cachedTextures.Length && index < limit)
+            {
+                if (_cachedTextures[index] == null || string.IsNullOrEmpty(_cachedUrlStrings[index]))
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
         private int FindReadyCacheIndexForOrientation(bool landscape)
         {
             EnsureCacheArrays();
             int index = 0;
-            while (index < _cachedUrlStrings.Length)
+            int limit = GetFutureCacheCapacity();
+            while (index < _cachedUrlStrings.Length && index < limit)
             {
                 VRCUrl url = _cachedUrls == null || index >= _cachedUrls.Length ? null : _cachedUrls[index];
+                string urlString = _cachedUrlStrings == null || index >= _cachedUrlStrings.Length ? string.Empty : _cachedUrlStrings[index];
                 if (_cachedTextures[index] != null &&
                     _cachedDownloads[index] != null &&
                     RemotePhotoUrlUtility.IsValidVrcUrl(url) &&
+                    !IsCurrentSyncedUrlString(urlString) &&
+                    !IsDisplayedUrlString(urlString) &&
                     IsUrlInOrientationPool(landscape, url))
                 {
                     return index;
@@ -3075,7 +3136,24 @@ namespace RemotePhotoSystem
         private int FindCacheStoreIndex(string incomingUrl)
         {
             bool currentSynced = IsCurrentSyncedUrlString(incomingUrl);
-            int limit = currentSynced ? GetMaxCachedTextures() : GetFutureCacheCapacity();
+            int futureLimit = GetFutureCacheCapacity();
+            int maxLimit = GetMaxCachedTextures();
+            if (currentSynced)
+            {
+                int stagingEmptyIndex = FindEmptyCacheIndexBetween(futureLimit, maxLimit);
+                if (stagingEmptyIndex >= 0)
+                {
+                    return stagingEmptyIndex;
+                }
+
+                int stagingStaleIndex = FindLeastRecentlyUsedCacheIndexWithRules(false, true, futureLimit, maxLimit);
+                if (stagingStaleIndex >= 0)
+                {
+                    return stagingStaleIndex;
+                }
+            }
+
+            int limit = currentSynced ? maxLimit : futureLimit;
             int emptyIndex = FindEmptyCacheIndexWithin(limit);
             if (emptyIndex >= 0)
             {
@@ -3103,6 +3181,11 @@ namespace RemotePhotoSystem
 
         private int FindLeastRecentlyUsedCacheIndexWithRules(bool allowCurrentSynced, bool allowPreloadWindow, int limit)
         {
+            return FindLeastRecentlyUsedCacheIndexWithRules(allowCurrentSynced, allowPreloadWindow, 0, limit);
+        }
+
+        private int FindLeastRecentlyUsedCacheIndexWithRules(bool allowCurrentSynced, bool allowPreloadWindow, int start, int limit)
+        {
             if (_cachedAccessTicks == null || _cachedAccessTicks.Length == 0)
             {
                 return -1;
@@ -3126,7 +3209,7 @@ namespace RemotePhotoSystem
 
             int selectedIndex = -1;
             int selectedTick = 0;
-            int index = 0;
+            int index = start < 0 ? 0 : start;
             while (index < limit)
             {
                 string cachedUrl = _cachedUrlStrings == null || index >= _cachedUrlStrings.Length ? string.Empty : _cachedUrlStrings[index];

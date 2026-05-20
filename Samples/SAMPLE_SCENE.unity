@@ -123,6 +123,39 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &328021932
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 328021933}
+  m_Layer: 0
+  m_Name: PhotoFrame16_9 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &328021933
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328021932}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
+  m_LocalPosition: {x: 0.609, y: 0, z: -1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1956463999}
+  - {fileID: 1109453332}
+  m_Father: {fileID: 676813609}
+  m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
 --- !u!1 &358170787
 GameObject:
   m_ObjectHideFlags: 0
@@ -237,6 +270,7 @@ MonoBehaviour:
   - {fileID: 2081672846193999646}
   - {fileID: 6021888636002948595}
   - {fileID: 4698436802368571144}
+  - {fileID: 794833177}
   syncedUrls: []
   syncedLoadOrderSlots: 
   syncedSlotRequestIds: 
@@ -318,11 +352,246 @@ Transform:
   - {fileID: 4763234226384571977}
   - {fileID: 8220661545607371061}
   - {fileID: 2107683478049403724}
+  - {fileID: 328021933}
   - {fileID: 7549524189975842721}
   - {fileID: 4032972052004073358}
   - {fileID: 5660964832686625644}
+  - {fileID: 2021538285}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &794833176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 794833181}
+  - component: {fileID: 794833180}
+  - component: {fileID: 794833179}
+  - component: {fileID: 794833177}
+  - component: {fileID: 794833178}
+  m_Layer: 0
+  m_Name: Photo16:9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &794833177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794833176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0de023805af5d154aaee21f80addff6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 794833178}
+  orientation: 1
+  materialSlot: 0
+  texturePropertyName: _MainTex
+  defaultTexture: {fileID: 2800000, guid: 612a3381863ec8844b98e8d79127bfa2, type: 3}
+  useFallbackTexture: 1
+  fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
+  photoFitMode: 1
+  projectionMode: 0
+  boxProjectionHorizontalFlip: 0
+  photoRotationDegrees: 0
+  backgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  aspectMode: 1
+  axisMode: 1
+  frameWidthAxis: 0
+  frameHeightAxis: 1
+  referenceBoxCenter: {x: 0, y: 0, z: 0}
+  referenceBoxSize: {x: 1, y: 1, z: 1}
+  manualAspectRatio: 1.7777778
+--- !u!114 &794833178
+MonoBehaviour:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794833176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 2
+  serializedProgramAsset: {fileID: 11400000, guid: a5e4e0f18079b3c42a1f3b4b7f55fc6d, type: 2}
+  programSource: {fileID: 11400000, guid: 4f413375c63df324e8a410c7804049c9, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!23 &794833179
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794833176}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 45c66c3bd23e8a44baae80a5a947124c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &794833180
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794833176}
+  m_Mesh: {fileID: -2167054210607586878, guid: 4cd87fd764a17584c9e63d47f7c2ba22, type: 3}
+--- !u!4 &794833181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794833176}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000000026692538, y: -0.000000026692534, z: 0.7071067, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.005, y: 1.005, z: 1.005}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 2021538285}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1036729396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1036729397}
+  - component: {fileID: 1036729399}
+  - component: {fileID: 1036729398}
+  m_Layer: 0
+  m_Name: Moulding16:9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1036729397
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1036729396}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000000026692538, y: -0.000000026692534, z: 0.7071067, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2021538285}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &1036729398
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1036729396}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 891d5c236930d4646a71c3eb10c3d1cf, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1036729399
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1036729396}
+  m_Mesh: {fileID: 5511692534096166390, guid: 4cd87fd764a17584c9e63d47f7c2ba22, type: 3}
 --- !u!1 &1069902874
 GameObject:
   m_ObjectHideFlags: 0
@@ -415,6 +684,156 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1109453331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1109453332}
+  - component: {fileID: 1109453336}
+  - component: {fileID: 1109453335}
+  - component: {fileID: 1109453334}
+  - component: {fileID: 1109453333}
+  m_Layer: 0
+  m_Name: Photo16:9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1109453332
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109453331}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000000026692538, y: -0.000000026692534, z: 0.7071067, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.002, y: 1.002, z: 1.002}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 328021933}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1109453333
+MonoBehaviour:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109453331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 2
+  serializedProgramAsset: {fileID: 11400000, guid: a5e4e0f18079b3c42a1f3b4b7f55fc6d, type: 2}
+  programSource: {fileID: 11400000, guid: 4f413375c63df324e8a410c7804049c9, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!114 &1109453334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109453331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0de023805af5d154aaee21f80addff6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 1109453333}
+  orientation: 1
+  materialSlot: 0
+  texturePropertyName: _MainTex
+  defaultTexture: {fileID: 2800000, guid: 612a3381863ec8844b98e8d79127bfa2, type: 3}
+  useFallbackTexture: 1
+  fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
+  photoFitMode: 1
+  projectionMode: 0
+  boxProjectionHorizontalFlip: 0
+  photoRotationDegrees: 0
+  backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+  aspectMode: 1
+  axisMode: 1
+  frameWidthAxis: 0
+  frameHeightAxis: 1
+  referenceBoxCenter: {x: 0, y: 0, z: 0}
+  referenceBoxSize: {x: 1, y: 1, z: 1}
+  manualAspectRatio: 1.7777778
+--- !u!23 &1109453335
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109453331}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 45c66c3bd23e8a44baae80a5a947124c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1109453336
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109453331}
+  m_Mesh: {fileID: -2167054210607586878, guid: 4cd87fd764a17584c9e63d47f7c2ba22, type: 3}
 --- !u!1 &1194479640
 GameObject:
   m_ObjectHideFlags: 0
@@ -486,6 +905,7 @@ MonoBehaviour:
   - {fileID: 8064948421120808963}
   - {fileID: 8957140278368439601}
   - {fileID: 387739575386758898}
+  - {fileID: 1109453334}
   syncedUrls: []
   syncedLoadOrderSlots: 
   syncedSlotRequestIds: 
@@ -613,14 +1033,14 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1490104450}
   inspectorLanguage: 2
-  galleryConfigFile: {fileID: 4900000, guid: c58116812c77d9247805f4f0d21ee0d6, type: 3}
-  configuredPlayMode: 0
+  galleryConfigFile: {fileID: 4900000, guid: 1047316e70a28544daf352758b514e2a, type: 3}
+  configuredPlayMode: 2
   loadingMode: 0
   preloadLandscapeCacheSize: 6
-  preloadPortraitCacheSize: 0
+  preloadPortraitCacheSize: 3
   retryAttempts: 3
   retryDelaySeconds: 2
-  loadOnceOnStart: 0
+  loadOnceOnStart: 1
   loadOnceDelaySeconds: 1
   managedGroups:
   - {fileID: 1194479642}
@@ -629,39 +1049,521 @@ MonoBehaviour:
   preloadDownloadMaterial: {fileID: 0}
   preloadDownloadMaterials: []
   bakedLandscapeUrls:
-  - url: https://vp.thok.top/01.png
-  - url: https://vp.thok.top/03.png
-  - url: https://vp.thok.top/05.png
-  - url: https://vp.thok.top/06.png
-  - url: https://vp.thok.top/08.png
-  - url: https://vp.thok.top/09.png
-  - url: https://vp.thok.top/11.png
-  - url: https://vp.thok.top/13.png
-  - url: https://vp.thok.top/14.png
-  - url: https://vp.thok.top/16.png
-  - url: https://vp.thok.top/17.png
-  - url: https://vp.thok.top/19.png
-  - url: https://vp.thok.top/20.png
-  - url: https://vp.thok.top/22.png
-  - url: https://vp.thok.top/24.png
-  - url: https://vp.thok.top/25.png
-  - url: https://vp.thok.top/27.png
-  - url: https://vp.thok.top/29.png
-  - url: https://vp.thok.top/31.png
+  - url: https://vp.thok.top/2026-05/fz04ge-ve8p.jpg
+  - url: https://vp.thok.top/2026-05/fz04ge-ve8n.jpg
+  - url: https://vp.thok.top/2026-05/fz04ge-ve8q.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnze.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnzd.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnza.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnzc.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz5.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz8.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnzb.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz9.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz6.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz7.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyz.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz3.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz4.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz2.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz1.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnz0.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyy.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyx.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyw.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyt.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyv.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnys.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyr.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyq.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyn.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyp.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyk.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnym.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyj.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyh.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnye.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyg.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyf.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyd.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyb.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnyc.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny8.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnya.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny9.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny6.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny5.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny4.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny3.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny2.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny1.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny0.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxz.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxy.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxx.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxw.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxt.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxp.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxv.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxr.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxq.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxj.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxn.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxk.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxm.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxh.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxg.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxf.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxe.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxd.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxb.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxc.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxa.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx9.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx6.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx8.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx7.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx5.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx4.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx3.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx2.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx1.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnx0.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwx.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwz.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwy.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnws.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnww.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwt.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwv.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwp.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwr.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwq.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwm.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwj.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwk.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwh.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwd.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwc.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwf.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwg.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwe.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwb.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwa.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw9.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw8.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw7.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw6.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw4.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw3.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtff.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfg.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfh.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfe.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf6.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfc.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfd.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfb.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf5.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf8.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf9.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfa.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf3.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf2.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf4.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf0.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf1.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtez.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtey.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtev.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtes.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtew.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtet.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jter.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jteq.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtep.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jten.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtem.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtek.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jteg.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtej.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jteh.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtef.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtee.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtec.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jted.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jteb.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte9.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte8.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtea.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte7.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte4.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte2.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte5.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte3.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte0.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte1.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnr.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnq.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnp.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnn.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnm.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnf.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnk.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnd.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvne.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnj.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnh.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvng.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvna.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn5.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnc.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn8.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvnb.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn9.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn7.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn6.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn4.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn3.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn2.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn1.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvn0.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmx.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmz.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmw.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmy.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmn.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmp.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmh.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmm.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmk.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmj.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmd.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmf.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmg.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvme.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm8.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmb.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvma.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm9.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm6.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm5.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm7.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm4.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm3.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm0.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkw.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm2.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvm1.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkz.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkx.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvky.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvks.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkv.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkt.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkr.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkp.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkn.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkm.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypa.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysh.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysn.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysm.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysk.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysj.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysf.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysg.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysc.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryse.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysd.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysa.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rysb.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys9.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys7.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys5.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys8.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys6.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys2.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys0.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrz.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrw.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrr.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryry.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrx.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrv.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrs.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrt.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrq.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrn.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrp.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrm.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrk.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrj.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrh.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrf.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryre.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrd.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrb.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrc.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryra.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr9.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr6.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr8.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr1.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr7.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr3.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr5.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr4.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr2.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqw.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryr0.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqy.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqz.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqx.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqr.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqv.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqt.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqs.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqm.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqq.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqp.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqn.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqk.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqj.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqg.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqh.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqf.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqe.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqc.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqd.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqb.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryqa.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq9.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq8.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq7.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq6.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq5.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq3.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypy.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq2.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq1.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq0.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypx.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypv.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypt.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypn.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryps.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypr.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypq.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypp.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypm.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypf.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypk.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypj.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypg.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryph.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rype.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypc.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypd.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypb.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryp9.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzz.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzx.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzy.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzw.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzv.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzs.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzt.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzr.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzj.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzq.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzp.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzn.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzm.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzk.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzh.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzf.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzg.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yza.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzd.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yze.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz9.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzc.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yzb.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz8.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz7.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz6.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz5.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz4.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz3.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz2.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz1.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyz.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yz0.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyy.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yys.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyw.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyv.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyx.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyr.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyq.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyp.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyj.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyn.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyk.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q2c.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q2d.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q2e.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q28.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q29.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q2b.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q2a.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q27.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q26.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q25.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q20.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1z.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q24.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q23.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q22.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q21.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1x.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1v.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1w.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1t.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1p.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1s.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1r.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1q.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1n.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1k.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dza.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzr.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzb.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5eb.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dys.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzk.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzg.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzm.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy1.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz9.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5eh.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyb.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyw.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ef.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzn.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz5.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ed.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyr.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dye.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ec.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyz.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e6.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy7.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy4.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dya.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzq.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy2.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzc.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ej.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e3.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyh.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzp.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyc.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e4.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy3.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz6.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyf.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e5.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e2.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzh.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy6.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e7.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyv.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyd.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ek.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyn.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e9.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dze.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyj.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy5.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e8.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz2.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz3.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyg.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5e1.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyy.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5em.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy0.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ee.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyx.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyq.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyp.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzd.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy8.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5ea.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz7.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz0.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tk-y5eg.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyk.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzf.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dym.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dy9.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz8.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dzj.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz4.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs8.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs7.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs3.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs4.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs6.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrx.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs5.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs1.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs2.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svs0.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrw.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrz.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svry.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrt.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrv.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrp.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrs.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrm.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrr.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrq.jpg
+  - url: https://vp.thok.top/2025-12/fykg48-svrn.jpg
   bakedPortraitUrls:
-  - url: https://vp.thok.top/02.png
-  - url: https://vp.thok.top/04.png
-  - url: https://vp.thok.top/07.png
-  - url: https://vp.thok.top/10.png
-  - url: https://vp.thok.top/12.png
-  - url: https://vp.thok.top/15.png
-  - url: https://vp.thok.top/18.png
-  - url: https://vp.thok.top/21.png
-  - url: https://vp.thok.top/23.png
-  - url: https://vp.thok.top/26.png
-  - url: https://vp.thok.top/28.png
-  - url: https://vp.thok.top/30.png
-  - url: https://vp.thok.top/32.png
+  - url: https://vp.thok.top/2026-05/fz04ge-ve8r.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vny7.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnxs.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnwn.jpg
+  - url: https://vp.thok.top/2026-05/fz04gd-vnw5.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtfj.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtf7.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jtex.jpg
+  - url: https://vp.thok.top/2026-04/fyz287-jte6.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmv.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvms.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmt.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmr.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmq.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvmc.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkq.jpg
+  - url: https://vp.thok.top/2026-04/fyz286-vvkk.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys4.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys3.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rys1.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryrg.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-ryq4.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypz.jpg
+  - url: https://vp.thok.top/2026-03/fyxx2q-rypw.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yyt.jpg
+  - url: https://vp.thok.top/2026-02/fywzs9-9yym.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1y.jpg
+  - url: https://vp.thok.top/2026-02/fywzs8-2q1m.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dyt.jpg
+  - url: https://vp.thok.top/2026-01/fyr1tm-0dz1.jpg
   landscapeUrls: []
   portraitUrls: []
   sequencePreloadLandscapeUrls: []
@@ -793,6 +1695,122 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 51.55, y: 42.622, z: -3.285}
+--- !u!1 &1956463998
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1956463999}
+  - component: {fileID: 1956464001}
+  - component: {fileID: 1956464000}
+  m_Layer: 0
+  m_Name: Moulding16:9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1956463999
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956463998}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000000026692538, y: -0.000000026692534, z: 0.7071067, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 328021933}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &1956464000
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956463998}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 1886519a91945fe498a79f65ff06431b, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1956464001
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956463998}
+  m_Mesh: {fileID: 5511692534096166390, guid: 4cd87fd764a17584c9e63d47f7c2ba22, type: 3}
+--- !u!1 &2021538284
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2021538285}
+  m_Layer: 0
+  m_Name: PhotoFrame16_9(White) (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2021538285
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2021538284}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
+  m_LocalPosition: {x: 0.609, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1036729397}
+  - {fileID: 794833181}
+  m_Father: {fileID: 676813609}
+  m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
 --- !u!1 &275933540961499820
 GameObject:
   m_ObjectHideFlags: 0
@@ -3853,6 +4871,14 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 568022270}
     ID: 66
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 1109453331}
+    ID: 67
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 794833176}
+    ID: 68
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

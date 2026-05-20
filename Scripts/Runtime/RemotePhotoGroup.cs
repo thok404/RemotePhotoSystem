@@ -287,6 +287,12 @@ namespace RemotePhotoSystem
 
         public void RefreshCurrentSelectionFromManager()
         {
+            if (_activeDisplaySequential && selectionRevision == _activeDisplayRevision)
+            {
+                ApplyNextSelectionSlotInOrder();
+                return;
+            }
+
             ApplyCurrentSelection();
         }
 
