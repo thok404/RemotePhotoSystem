@@ -1034,13 +1034,13 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 1490104450}
   inspectorLanguage: 2
   galleryConfigFile: {fileID: 4900000, guid: 1047316e70a28544daf352758b514e2a, type: 3}
-  configuredPlayMode: 2
+  configuredPlayMode: 0
   loadingMode: 0
   preloadLandscapeCacheSize: 6
   preloadPortraitCacheSize: 3
   retryAttempts: 3
   retryDelaySeconds: 2
-  loadOnceOnStart: 1
+  loadOnceOnStart: 0
   loadOnceDelaySeconds: 1
   managedGroups:
   - {fileID: 1194479642}

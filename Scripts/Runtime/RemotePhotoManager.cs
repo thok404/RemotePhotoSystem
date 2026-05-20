@@ -1504,17 +1504,6 @@ namespace RemotePhotoSystem
             return -1;
         }
 
-        private bool HasCacheStoreRoomForFuturePreload()
-        {
-            int futureLimit = GetFutureCacheCapacity();
-            if (FindEmptyCacheIndexWithin(futureLimit) >= 0)
-            {
-                return true;
-            }
-
-            return FindLeastRecentlyUsedCacheIndexWithRules(false, false, futureLimit) >= 0;
-        }
-
         private VRCUrl BuildRandomUrlForActiveRequest()
         {
             if (!_activeRandomRequestActive || _activeRandomGroup == null || _activeRandomSlots == null)
@@ -3058,11 +3047,6 @@ namespace RemotePhotoSystem
             }
 
             return -1;
-        }
-
-        private int FindEmptyCacheIndex()
-        {
-            return FindEmptyCacheIndexWithin(GetMaxCachedTextures());
         }
 
         private int FindEmptyCacheIndexWithin(int limit)
