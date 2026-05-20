@@ -2,9 +2,12 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
 {
     Properties
     {
-        _MainTex ("Photo Texture", 2D) = "white" {}
+        _MainTex ("Albedo", 2D) = "white" {}
+        [HideInInspector] _RemotePhotoImageTex ("Remote Photo Texture", 2D) = "white" {}
         [HideInInspector] _RemotePhotoPreloadTex ("Remote Photo Preload Texture", 2D) = "white" {}
         _RemotePhotoBackgroundColor ("Background Color", Color) = (0, 0, 0, 1)
+        _RemotePhotoAlbedoInfluence ("Texture Mix", Range(0, 1)) = 0.5
+        [HideInInspector] _RemotePhotoUseAlbedoBackground ("Use Albedo Background", Float) = 0
         [HideInInspector] _RemotePhotoFitMode ("Remote Photo Fit Mode", Float) = 0
         [HideInInspector] _PhotoRotationDegrees ("Photo Rotation Degrees", Range(0, 360)) = 0
         [HideInInspector] _RemotePhotoProjectionMode ("Remote Photo Projection Mode", Float) = 0
@@ -39,7 +42,10 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         #pragma target 3.0
 
         sampler2D _MainTex;
+        sampler2D _RemotePhotoImageTex;
         fixed4 _RemotePhotoBackgroundColor;
+        half _RemotePhotoAlbedoInfluence;
+        half _RemotePhotoUseAlbedoBackground;
         float _RemotePhotoFitMode;
         float _PhotoRotationDegrees;
         float _RemotePhotoProjectionMode;
@@ -66,7 +72,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         struct Input
         {
             float2 uv_MainTex;
-            float2 uv_BumpMap;
+            float2 uv_RemotePhotoImageTex;
             float3 localPos;
             float3 localNormal;
         };
@@ -158,7 +164,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             bool usesBoxProjection = _RemotePhotoProjectionMode > 0.5;
             bool isPhotoFace = !usesBoxProjection || dominantAxis == shortestAxis;
 
-            float2 baseUv = usesBoxProjection ? BuildBoxProjectionUv(IN.localPos) : IN.uv_MainTex;
+            float2 baseUv = usesBoxProjection ? BuildBoxProjectionUv(IN.localPos) : IN.uv_RemotePhotoImageTex;
             if (usesBoxProjection && GetAxisValue(IN.localNormal, shortestAxis) < 0.0)
             {
                 baseUv.x = 1.0 - baseUv.x;
@@ -169,22 +175,37 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             }
 
             float2 uv = RotatePhotoUv(baseUv);
-            fixed4 c = isPhotoFace ? tex2D(_MainTex, uv) * _Color : _RemotePhotoBackgroundColor;
+            fixed4 albedo = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+            fixed4 photo = tex2D(_RemotePhotoImageTex, uv);
+            half useAlbedoBackground = _RemotePhotoUseAlbedoBackground;
+            half3 albedoDelta = abs(_Color.rgb - half3(1.0, 1.0, 1.0));
+            if (albedoDelta.r + albedoDelta.g + albedoDelta.b > 0.001 || abs(_Color.a - 1.0) > 0.001)
+            {
+                useAlbedoBackground = 1.0;
+            }
+
+            fixed4 background = useAlbedoBackground > 0.5 ? albedo : _RemotePhotoBackgroundColor;
+            fixed4 c = background;
+            if (isPhotoFace)
+            {
+                fixed3 albedoMultiplier = lerp(fixed3(1.0, 1.0, 1.0), albedo.rgb, saturate(_RemotePhotoAlbedoInfluence));
+                c = fixed4(photo.rgb * albedoMultiplier, photo.a);
+            }
 
             if (_RemotePhotoFitMode > 0.5 && _RemotePhotoFitMode < 1.5)
             {
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 {
-                    c = _RemotePhotoBackgroundColor;
+                    c = background;
                 }
             }
 
-            fixed4 metallicGloss = tex2D(_MetallicGlossMap, uv);
-            half smoothnessMask = _SmoothnessTextureChannel > 0.5 ? c.a : metallicGloss.a;
+            fixed4 metallicGloss = tex2D(_MetallicGlossMap, IN.uv_MainTex);
+            half smoothnessMask = _SmoothnessTextureChannel > 0.5 ? albedo.a : metallicGloss.a;
             o.Albedo = c.rgb;
             o.Metallic = _Metallic * metallicGloss.r;
             o.Smoothness = _Glossiness * smoothnessMask;
-            o.Normal = UnpackScaleNormal(tex2D(_BumpMap, IN.uv_BumpMap), _BumpScale);
+            o.Normal = UnpackScaleNormal(tex2D(_BumpMap, IN.uv_MainTex), _BumpScale);
         }
         ENDCG
     }

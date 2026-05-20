@@ -85,6 +85,7 @@ namespace RemotePhotoSystem
         private const string RemotePhotoUvScaleYPropertyName = "_RemotePhotoUvScaleY";
         private const string RemotePhotoUvOffsetXPropertyName = "_RemotePhotoUvOffsetX";
         private const string RemotePhotoUvOffsetYPropertyName = "_RemotePhotoUvOffsetY";
+        private const string RemotePhotoImageTexturePropertyName = "_RemotePhotoImageTex";
         private const string RemotePhotoPreloadTexturePropertyName = "_RemotePhotoPreloadTex";
 
         public void Start()
@@ -766,12 +767,23 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            _runtimeMaterial.SetTexture(texturePropertyName, texture);
+            string photoTexturePropertyName = GetPhotoTexturePropertyName();
+            _runtimeMaterial.SetTexture(photoTexturePropertyName, texture);
             _runtimeMaterial.SetColor(RemotePhotoBackgroundColorPropertyName, backgroundColor);
             _runtimeMaterial.SetFloat(RemotePhotoFitModePropertyName, GetFitModeFloat(fitMode));
             _runtimeMaterial.SetFloat(PhotoRotationDegreesPropertyName, GetResolvedPhotoRotationDegrees());
             ApplyProjectionProperties();
-            SetMaterialUv(fitMode, texture);
+            SetMaterialUv(fitMode, texture, photoTexturePropertyName);
+        }
+
+        private string GetPhotoTexturePropertyName()
+        {
+            if (_runtimeMaterial != null && _runtimeMaterial.HasProperty(RemotePhotoImageTexturePropertyName))
+            {
+                return RemotePhotoImageTexturePropertyName;
+            }
+
+            return texturePropertyName;
         }
 
         private void ApplyProjectionProperties()
@@ -880,7 +892,7 @@ namespace RemotePhotoSystem
             return TryResolveAutomaticFrameAspectRatio() > 0f;
         }
 
-        private void SetMaterialUv(int fitMode, Texture texture)
+        private void SetMaterialUv(int fitMode, Texture texture, string photoTexturePropertyName)
         {
             if (_runtimeMaterial == null)
             {
@@ -940,8 +952,8 @@ namespace RemotePhotoSystem
                 }
             }
 
-            _runtimeMaterial.SetTextureScale(texturePropertyName, scale);
-            _runtimeMaterial.SetTextureOffset(texturePropertyName, offset);
+            _runtimeMaterial.SetTextureScale(photoTexturePropertyName, scale);
+            _runtimeMaterial.SetTextureOffset(photoTexturePropertyName, offset);
             _runtimeMaterial.SetFloat(RemotePhotoUvScaleXPropertyName, scale.x);
             _runtimeMaterial.SetFloat(RemotePhotoUvScaleYPropertyName, scale.y);
             _runtimeMaterial.SetFloat(RemotePhotoUvOffsetXPropertyName, offset.x);

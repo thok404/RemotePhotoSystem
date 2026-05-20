@@ -25,6 +25,7 @@ namespace RemotePhotoSystem.Editor
         private static readonly GUIContent MetallicLabel = new GUIContent("Metallic");
         private static readonly GUIContent NormalMapLabel = new GUIContent("Normal Map");
         private static readonly GUIContent SmoothnessSourceLabel = new GUIContent("Source");
+        private static readonly GUIContent TextureMixLabel = new GUIContent("Texture Mix");
         private static readonly string[] SmoothnessSources = { "Metallic Alpha", "Albedo Alpha" };
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
@@ -37,8 +38,22 @@ namespace RemotePhotoSystem.Editor
             MaterialProperty smoothnessSource = FindProperty("_SmoothnessTextureChannel", properties);
             MaterialProperty normalMap = FindProperty("_BumpMap", properties);
             MaterialProperty normalScale = FindProperty("_BumpScale", properties);
+            MaterialProperty photoAlbedoInfluence = FindProperty("_RemotePhotoAlbedoInfluence", properties);
+            MaterialProperty useAlbedoBackground = FindProperty("_RemotePhotoUseAlbedoBackground", properties, false);
 
             materialEditor.TexturePropertySingleLine(AlbedoLabel, albedoTexture, albedoColor);
+            materialEditor.RangeProperty(photoAlbedoInfluence, TextureMixLabel.text);
+            if (useAlbedoBackground != null)
+            {
+                Color color = albedoColor.colorValue;
+                bool nonDefaultAlbedo = albedoTexture.textureValue != null ||
+                    Mathf.Abs(color.r - 1f) > 0.001f ||
+                    Mathf.Abs(color.g - 1f) > 0.001f ||
+                    Mathf.Abs(color.b - 1f) > 0.001f ||
+                    Mathf.Abs(color.a - 1f) > 0.001f;
+                useAlbedoBackground.floatValue = nonDefaultAlbedo ? 1f : 0f;
+            }
+
             materialEditor.TexturePropertySingleLine(MetallicLabel, metallicMap, metallic);
 
             EditorGUI.indentLevel++;

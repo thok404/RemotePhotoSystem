@@ -9,6 +9,9 @@ namespace RemotePhotoSystem.Editor
     public class RemotePhotoFrameEditor : UnityEditor.Editor
     {
         private static int s_editingReferenceBoxInstanceId;
+        private const string PhotoFrameLitShaderName = "RemotePhotoSystem/Photo Frame Display Lit";
+        private const string AlbedoTexturePropertyName = "_MainTex";
+        private const string AlbedoColorPropertyName = "_Color";
 
         private readonly BoxBoundsHandle _referenceBoxHandle = new BoxBoundsHandle();
 
@@ -69,10 +72,10 @@ namespace RemotePhotoSystem.Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("texturePropertyName"),
                 G(language,
                     "Texture Property", "テクスチャプロパティ", "贴图属性名", "텍스처 프로퍼티",
-                    "Target texture slot in the Shader.",
-                    "Shader 内の書き込み先テクスチャスロットです。",
-                    "Shader 中要写入的贴图槽。",
-                    "Shader에서 텍스처를 넣을 슬롯입니다."));
+                    "Target texture slot for Unlit or custom Shaders. Project Lit Shader uses its internal photo slot.",
+                    "Unlit またはカスタム Shader の書き込み先です。プロジェクト Lit Shader は内部の写真スロットを使います。",
+                    "Unlit 或自定义 Shader 的写入槽。项目 Lit Shader 会使用内部照片槽。",
+                    "Unlit 또는 커스텀 Shader의 대상 슬롯입니다. 프로젝트 Lit Shader는 내부 사진 슬롯을 사용합니다."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultTexture"),
                 G(language,
                     "Default Texture", "デフォルトテクスチャ", "默认贴图", "기본 텍스처",
@@ -265,6 +268,19 @@ namespace RemotePhotoSystem.Editor
 
             DrawResolvedAspectRatio(language, display, multiObjectEditing);
 
+            int litAlbedoOverrideCount = CountLitAlbedoOverrideMaterials();
+            if (litAlbedoOverrideCount > 0)
+            {
+                EditorGUILayout.HelpBox(
+                    L(language,
+                        "Background Color is disabled for the connected Lit material because its Albedo is not default. Lit Albedo is used as background and mixed with photos; adjust Texture Mix on the material if the photo becomes too dark.",
+                        "接続された Lit マテリアルの Albedo がデフォルトではないため、Background Color は無効です。Lit Albedo が背景として使われ、写真にも合成されます。写真が暗すぎる場合はマテリアルの Texture Mix を調整してください。",
+                        "已连接的 Lit 材质 Albedo 不是默认值，因此 Background Color 被禁用。Lit Albedo 会作为背景并与照片混合；如果照片过暗，请调整材质上的 Texture Mix。",
+                        "연결된 Lit 머티리얼의 Albedo가 기본값이 아니므로 Background Color는 비활성화됩니다. Lit Albedo가 배경으로 사용되고 사진과도 혼합됩니다. 사진이 너무 어두우면 머티리얼의 Texture Mix를 조정하세요.") +
+                    " (" + litAlbedoOverrideCount + "/" + targets.Length + ")",
+                    MessageType.Info);
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -442,6 +458,71 @@ namespace RemotePhotoSystem.Editor
             }
 
             return count;
+        }
+
+        private int CountLitAlbedoOverrideMaterials()
+        {
+            int count = 0;
+            int index = 0;
+            while (index < targets.Length)
+            {
+                RemotePhotoFrame display = targets[index] as RemotePhotoFrame;
+                if (HasLitAlbedoOverrideMaterial(display))
+                {
+                    count++;
+                }
+
+                index++;
+            }
+
+            return count;
+        }
+
+        private bool HasLitAlbedoOverrideMaterial(RemotePhotoFrame display)
+        {
+            Material material = GetFrameMaterial(display);
+            if (material == null || material.shader == null || material.shader.name != PhotoFrameLitShaderName)
+            {
+                return false;
+            }
+
+            if (material.HasProperty(AlbedoTexturePropertyName) && material.GetTexture(AlbedoTexturePropertyName) != null)
+            {
+                return true;
+            }
+
+            if (!material.HasProperty(AlbedoColorPropertyName))
+            {
+                return false;
+            }
+
+            Color color = material.GetColor(AlbedoColorPropertyName);
+            return Mathf.Abs(color.r - 1f) > 0.001f ||
+                   Mathf.Abs(color.g - 1f) > 0.001f ||
+                   Mathf.Abs(color.b - 1f) > 0.001f ||
+                   Mathf.Abs(color.a - 1f) > 0.001f;
+        }
+
+        private Material GetFrameMaterial(RemotePhotoFrame display)
+        {
+            if (display == null)
+            {
+                return null;
+            }
+
+            MeshRenderer renderer = display.GetComponent<MeshRenderer>();
+            if (renderer == null)
+            {
+                return null;
+            }
+
+            Material[] materials = renderer.sharedMaterials;
+            if (materials == null || display.materialSlot < 0 || display.materialSlot >= materials.Length)
+            {
+                return null;
+            }
+
+            return materials[display.materialSlot];
         }
 
         private void DrawResolvedAspectRatio(RemotePhotoInspectorLanguage language, RemotePhotoFrame display, bool multiObjectEditing)
