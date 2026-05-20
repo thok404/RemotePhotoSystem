@@ -1,6 +1,7 @@
 ```yaml
 codex_project_backup:
   project_name: RemotePhotoSystem
+  agent_operating_rule: "Do not run git commands or modify git state unless the user explicitly asks for git work."
   repository_root: .
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
@@ -519,26 +520,36 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Snapshot current project state
+    summary: Preserve Lit Shader Albedo while displaying remote photos
     commit:
-      hash: da81d5d
-      message: Snapshot current project state
+      hash: 0846248
+      message: Preserve lit material albedo for photo frames
     files_changed:
-      - Scripts/Runtime/RemotePhotoGroup.cs
+      - Scripts/Runtime/RemotePhotoFrame.cs
+      - Scripts/Editor/RemotePhotoFrameDisplayLitShaderGUI.cs
+      - Scripts/Editor/RemotePhotoFrameEditor.cs
+      - Shaders/RemotePhotoFrameDisplayLit.shader
     behavior_changes:
-      - current local project state was committed and pushed as-is
-      - no additional source edits were made after that snapshot before this backup update
-    release_package:
-      path: Release/RemotePhotoSystem_v1.00.unitypackage
-      size_bytes: 7472536
-      sha256: 3D800C711C4E65602D01243AF75EDE28FAA04A7962FA0F1EC557F57E10E6FBAF
-      last_write_time: 2026-05-20 22:52:01
+      - Lit Shader uses _RemotePhotoImageTex as the remote photo slot
+      - Lit Shader keeps _MainTex and _Color as Albedo surface data
+      - Frame writes photos to the Lit Shader internal photo slot when available
+      - Unlit and custom shaders continue using texturePropertyName
+      - Texture Mix controls how strongly Lit Albedo multiplies the photo
+      - non-default Lit Albedo disables Background Color and uses Albedo as background
+      - Frame Inspector shows an info box when Lit Albedo disables Background Color
+      - Smoothness Source Albedo Alpha reads Albedo alpha, not remote photo alpha
+      - photo fit UV for Lit Shader uses _RemotePhotoImageTex UV to keep Crop/Contain/Tile behavior
+    validation:
+      - dotnet build PhotoFrame.sln -nologo passed
+      - Unity Shader refresh still required for final editor-side shader import validation
+    excluded_local_changes:
+      - Samples/SAMPLE_SCENE.unity contains an unrelated empty reference change and was not committed
     pending_runtime_tests:
       - UdonSharp compile in Unity after serialized Udon asset refresh if Unity regenerates program assets
-      - idle Preload cache count stays within configured future cache capacity
-      - no repeated download loop for an already cached URL
-      - Load Once Sequence Preload current page does not occupy future preload capacity
-      - Random ReadyPool consumed textures are replaced by future preload rather than duplicated
+      - Lit Shader default Albedo keeps Background Color behavior
+      - Lit Shader non-default Albedo preserves scratches, dirt, normal map, metallic, and smoothness
+      - Texture Mix keeps photos visible on dark or black Albedo materials
+      - MeshUv and Box projection retain correct photo fit without stretching
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/
