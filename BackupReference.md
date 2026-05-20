@@ -5,7 +5,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-05-20
+  current_date_recorded: 2026-05-21
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -430,8 +430,7 @@ codex_project_backup:
     release_directory: Release
     release_directory_status: ignored by package git repository
     github_release_assets:
-      - Release/RemotePhotoSystem_v0.95.unitypackage
-      - Release/RemotePhotoSystem_WebTool_v0.95.zip
+      - Release/RemotePhotoSystem_v1.00.unitypackage
     webtool_release_source: WebTool
 
   license:
@@ -520,19 +519,20 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Preload cache same-URL update fix
+    summary: Snapshot current project state
+    commit:
+      hash: da81d5d
+      message: Snapshot current project state
     files_changed:
-      - Scripts/Runtime/RemotePhotoManager.cs
+      - Scripts/Runtime/RemotePhotoGroup.cs
     behavior_changes:
-      - same-URL cache updates no longer call DisposeCachedDownloadAt because that clears the whole cache slot
-      - old cached download handles are disposed directly when replaced
-      - cache URL, Texture, download handle, and access tick remain valid after same-URL updates
-      - this prevents downloaded textures from disappearing from cache accounting and being redownloaded unnecessarily
-    verification:
-      dotnet_build: passed
-      warnings:
-        - existing System.Threading.Tasks.Extensions version conflict in UdonSharp.Editor.csproj
-        - existing QuickBrown LuraSwitch2 SwitchBase unused field warning
+      - current local project state was committed and pushed as-is
+      - no additional source edits were made after that snapshot before this backup update
+    release_package:
+      path: Release/RemotePhotoSystem_v1.00.unitypackage
+      size_bytes: 7472536
+      sha256: 3D800C711C4E65602D01243AF75EDE28FAA04A7962FA0F1EC557F57E10E6FBAF
+      last_write_time: 2026-05-20 22:52:01
     pending_runtime_tests:
       - UdonSharp compile in Unity after serialized Udon asset refresh if Unity regenerates program assets
       - idle Preload cache count stays within configured future cache capacity
