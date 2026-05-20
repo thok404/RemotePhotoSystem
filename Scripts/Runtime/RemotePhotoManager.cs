@@ -943,11 +943,17 @@ namespace RemotePhotoSystem
             _cacheAccessTick++;
             if (existingIndex >= 0)
             {
+                IVRCImageDownload previousDownload = _cachedDownloads[existingIndex];
+                if (download != null && previousDownload != null && previousDownload != download)
+                {
+                    previousDownload.Dispose();
+                }
+
+                _cachedUrlStrings[existingIndex] = urlString;
                 _cachedUrls[existingIndex] = url;
                 _cachedTextures[existingIndex] = texture;
                 if (download != null)
                 {
-                    DisposeCachedDownloadAt(existingIndex);
                     _cachedDownloads[existingIndex] = download;
                 }
 

@@ -5,7 +5,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-05-19
+  current_date_recorded: 2026-05-20
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -520,33 +520,25 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Load Once Preload current-page completion fix
+    summary: Preload cache same-URL update fix
     files_changed:
       - Scripts/Runtime/RemotePhotoManager.cs
-      - Scripts/Runtime/RemotePhotoGroup.cs
-      - Scripts/Runtime/RemotePhotoManager.asset
-      - Scripts/Runtime/RemotePhotoGroup.asset
     behavior_changes:
-      - Manager now checks whether each specific Frame is displaying its assigned current synced URL
-      - current synced pages are not considered complete just because the same URL is displayed by another Frame
-      - future ReadyPool filling is paused while any current synced Frame still has not displayed its assigned URL
-      - cache consumption wakes the preload queue so remaining current synced Frames continue to receive priority
-      - Random direct selection avoids current synced URLs and displayed URLs before falling back
-      - Sequence preload synced fields were renamed to sequencePreloadLandscapeUrls, sequencePreloadPortraitUrls, and sequencePreloadOrderedUrls
-      - Manager runtime methods were reorganized into regions and dead preload helper code was removed
+      - same-URL cache updates no longer call DisposeCachedDownloadAt because that clears the whole cache slot
+      - old cached download handles are disposed directly when replaced
+      - cache URL, Texture, download handle, and access tick remain valid after same-URL updates
+      - this prevents downloaded textures from disappearing from cache accounting and being redownloaded unnecessarily
     verification:
       dotnet_build: passed
-      diff_check: passed
       warnings:
         - existing System.Threading.Tasks.Extensions version conflict in UdonSharp.Editor.csproj
         - existing QuickBrown LuraSwitch2 SwitchBase unused field warning
     pending_runtime_tests:
-      - UdonSharp compile in Unity after serialized Udon asset refresh
-      - Load Once Random Preload fills all managed Frames before future ReadyPool storage
-      - multi-Group startup with duplicate URLs
-      - Random Preload ReadyPool refill after current synced pages finish
-      - Sequence Preload after renamed synced fields
-      - late joiner applying already synced Load Once selection
+      - UdonSharp compile in Unity after serialized Udon asset refresh if Unity regenerates program assets
+      - idle Preload cache count stays within configured future cache capacity
+      - no repeated download loop for an already cached URL
+      - Load Once Sequence Preload current page does not occupy future preload capacity
+      - Random ReadyPool consumed textures are replaced by future preload rather than duplicated
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/
