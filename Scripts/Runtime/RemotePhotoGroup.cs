@@ -36,6 +36,14 @@ namespace RemotePhotoSystem
         private int _lastAppliedSignature;
         private bool _loadOnceApplied;
         private bool _userInteracted;
+        private bool _serializationDirty;
+        private bool _serializationFlushScheduled;
+        private bool _deserializationApplyScheduled;
+        private int _pendingMasterTriggerAction = -1;
+        private int _pendingMasterTriggerRetryCount;
+        private bool _pendingMasterTriggerRetryScheduled;
+        private const int MaxMasterTriggerRetryCount = 3;
+        private const float MasterTriggerRetryDelaySeconds = 0.25f;
 
         public void Start()
         {
@@ -51,35 +59,35 @@ namespace RemotePhotoSystem
 
         public void TriggerRandom()
         {
-            TriggerInternal(TriggerActionRandom);
+            SubmitTriggerRequest(TriggerActionRandom);
         }
 
         public void TriggerPrevious()
         {
-            TriggerInternal(TriggerActionPrevious);
+            SubmitTriggerRequest(TriggerActionPrevious);
         }
 
         public void TriggerNext()
         {
-            TriggerInternal(TriggerActionNext);
+            SubmitTriggerRequest(TriggerActionNext);
         }
 
-        public void _RequestTriggerRandom()
+        public void RequestTriggerRandomNetwork()
         {
             TriggerInternalAsMaster(TriggerActionRandom);
         }
 
-        public void _RequestTriggerPrevious()
+        public void RequestTriggerPreviousNetwork()
         {
             TriggerInternalAsMaster(TriggerActionPrevious);
         }
 
-        public void _RequestTriggerNext()
+        public void RequestTriggerNextNetwork()
         {
             TriggerInternalAsMaster(TriggerActionNext);
         }
 
-        private void TriggerInternal(int triggerAction)
+        private void SubmitTriggerRequest(int triggerAction)
         {
             lastTriggerError = string.Empty;
 
@@ -90,6 +98,21 @@ namespace RemotePhotoSystem
             }
 
             TriggerInternalAsMaster(triggerAction);
+        }
+
+        public void RetryPendingMasterTrigger()
+        {
+            _pendingMasterTriggerRetryScheduled = false;
+
+            if (!Networking.IsMaster || _pendingMasterTriggerAction < 0)
+            {
+                _pendingMasterTriggerAction = -1;
+                _pendingMasterTriggerRetryCount = 0;
+                return;
+            }
+
+            int action = _pendingMasterTriggerAction;
+            TriggerInternalAsMaster(action);
         }
 
         private void TriggerInternalAsMaster(int triggerAction)
@@ -110,11 +133,13 @@ namespace RemotePhotoSystem
             }
 
             manager.EnsureMasterOwnership();
-            if (!Networking.IsOwner(gameObject) || !Networking.IsOwner(manager.gameObject))
+            if (!EnsureWritableOrRetry(triggerAction))
             {
-                lastTriggerError = "Master could not take ownership of this group or its Remote Photo Manager.";
                 return;
             }
+
+            _pendingMasterTriggerAction = -1;
+            _pendingMasterTriggerRetryCount = 0;
 
             if (triggerAction == TriggerActionRandom && !CanPassTriggerCooldown())
             {
@@ -161,7 +186,7 @@ namespace RemotePhotoSystem
                 }
 
                 MarkTriggerCooldown();
-                RequestSerialization();
+                MarkGroupSyncDirty();
                 manager.LogDebug("Group random preload request accepted: " + gameObject.name);
                 return;
             }
@@ -267,21 +292,38 @@ namespace RemotePhotoSystem
         {
             if (triggerAction == TriggerActionRandom)
             {
-                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerRandom));
+                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(RequestTriggerRandomNetwork));
                 return;
             }
 
             if (triggerAction == TriggerActionPrevious)
             {
-                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerPrevious));
+                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(RequestTriggerPreviousNetwork));
                 return;
             }
 
-            SendCustomNetworkEvent(NetworkEventTarget.All, nameof(_RequestTriggerNext));
+            SendCustomNetworkEvent(NetworkEventTarget.All, nameof(RequestTriggerNextNetwork));
         }
 
         public override void OnDeserialization()
         {
+            if (_deserializationApplyScheduled)
+            {
+                return;
+            }
+
+            _deserializationApplyScheduled = true;
+            SendCustomEventDelayedFrames(nameof(ApplyDeserializedSelectionDeferred), 1);
+        }
+
+        public void ApplyDeserializedSelectionDeferred()
+        {
+            _deserializationApplyScheduled = false;
+            if (!ValidateSyncedSelection())
+            {
+                return;
+            }
+
             ApplyCurrentSelection();
         }
 
@@ -294,6 +336,51 @@ namespace RemotePhotoSystem
             }
 
             ApplyCurrentSelection();
+        }
+
+        public void NotifyManagerCachedUrl(VRCUrl url)
+        {
+            if (!RemotePhotoUrlUtility.IsValidVrcUrl(url) || targets == null || syncedUrls == null)
+            {
+                return;
+            }
+
+            string urlString = url.Get();
+            int index = 0;
+            bool matched = false;
+            while (index < syncedUrls.Length)
+            {
+                if (RemotePhotoUrlUtility.IsValidVrcUrl(syncedUrls[index]) && syncedUrls[index].Get() == urlString)
+                {
+                    int slot = syncedLoadOrderSlots != null && index < syncedLoadOrderSlots.Length
+                        ? syncedLoadOrderSlots[index]
+                        : index;
+                    if (slot >= 0 && slot < targets.Length && targets[slot] != null && IsSlotCurrentSelection(slot))
+                    {
+                        targets[slot].NotifyManagerCacheReady(url);
+                        matched = true;
+                    }
+                }
+
+                index++;
+            }
+
+            if (matched && _activeDisplaySequential)
+            {
+                RefreshCurrentSelectionFromManager();
+            }
+        }
+
+        public void FlushGroupSerialization()
+        {
+            _serializationFlushScheduled = false;
+            if (!_serializationDirty)
+            {
+                return;
+            }
+
+            _serializationDirty = false;
+            RequestSerialization();
         }
 
         private bool CanPassTriggerCooldown()
@@ -322,6 +409,44 @@ namespace RemotePhotoSystem
             }
 
             nextAllowedTriggerServerTime = Networking.GetServerTimeInSeconds() + triggerCooldownSeconds;
+        }
+
+        private bool EnsureWritableOrRetry(int triggerAction)
+        {
+            if (Networking.IsOwner(gameObject) && manager != null && Networking.IsOwner(manager.gameObject))
+            {
+                return true;
+            }
+
+            if (_pendingMasterTriggerRetryCount >= MaxMasterTriggerRetryCount)
+            {
+                lastTriggerError = "Master could not take ownership of this group or its Remote Photo Manager.";
+                _pendingMasterTriggerAction = -1;
+                _pendingMasterTriggerRetryCount = 0;
+                return false;
+            }
+
+            _pendingMasterTriggerAction = triggerAction;
+            if (!_pendingMasterTriggerRetryScheduled)
+            {
+                _pendingMasterTriggerRetryScheduled = true;
+                _pendingMasterTriggerRetryCount++;
+                SendCustomEventDelayedSeconds(nameof(RetryPendingMasterTrigger), MasterTriggerRetryDelaySeconds);
+            }
+
+            return false;
+        }
+
+        private void MarkGroupSyncDirty()
+        {
+            _serializationDirty = true;
+            if (_serializationFlushScheduled)
+            {
+                return;
+            }
+
+            _serializationFlushScheduled = true;
+            SendCustomEventDelayedFrames(nameof(FlushGroupSerialization), 1);
         }
 
         private void EnsureSyncedArrays()
@@ -437,6 +562,22 @@ namespace RemotePhotoSystem
             return true;
         }
 
+        private bool WriteSyncedSlotPair(int pairIndex, int slotIndex, VRCUrl url, int revision)
+        {
+            if (!WriteSelectionPair(pairIndex, slotIndex, url))
+            {
+                return false;
+            }
+
+            if (syncedSlotRequestIds == null || slotIndex < 0 || slotIndex >= syncedSlotRequestIds.Length)
+            {
+                return false;
+            }
+
+            syncedSlotRequestIds[slotIndex] = revision;
+            return true;
+        }
+
         private void RegisterPreloadDownloadMaterial()
         {
             if (manager == null || targets == null)
@@ -474,7 +615,7 @@ namespace RemotePhotoSystem
             _activeDisplayOrderIndex = 0;
             _activeDisplaySerial++;
             _activeDisplaySequential = false;
-            RequestSerialization();
+            MarkGroupSyncDirty();
             return selectionRevision;
         }
 
@@ -501,15 +642,14 @@ namespace RemotePhotoSystem
                 pairIndex = FindEmptySelectionPairIndex();
             }
 
-            if (!WriteSelectionPair(pairIndex, slotIndex, url))
+            if (!WriteSyncedSlotPair(pairIndex, slotIndex, url, selectionRevision))
             {
                 return false;
             }
 
-            syncedSlotRequestIds[slotIndex] = selectionRevision;
             loadOrderRevision = selectionRevision;
             targets[slotIndex].ApplyManagerTextureForSelection(texture, sourceManager, url, selectionRevision, selectionSessionId, this, slotIndex, _activeDisplaySerial);
-            RequestSerialization();
+            MarkGroupSyncDirty();
             return true;
         }
 
@@ -737,6 +877,11 @@ namespace RemotePhotoSystem
                 return;
             }
 
+            if (!ValidateSyncedSelection())
+            {
+                return;
+            }
+
             int signature = BuildSelectionSignature();
             if (selectionRevision < _lastAppliedRevision)
             {
@@ -930,6 +1075,52 @@ namespace RemotePhotoSystem
             }
 
             return actualCount == expectedCount;
+        }
+
+        private bool ValidateSyncedSelection()
+        {
+            if (targets == null || syncedUrls == null || syncedLoadOrderSlots == null)
+            {
+                return false;
+            }
+
+            if (syncedUrls.Length != syncedLoadOrderSlots.Length)
+            {
+                return false;
+            }
+
+            if (syncedSlotRequestIds == null || syncedSlotRequestIds.Length < targets.Length)
+            {
+                return false;
+            }
+
+            int index = 0;
+            while (index < syncedUrls.Length)
+            {
+                VRCUrl url = syncedUrls[index];
+                int slot = syncedLoadOrderSlots[index];
+                if (RemotePhotoUrlUtility.IsValidVrcUrl(url))
+                {
+                    if (slot < 0 || slot >= targets.Length || targets[slot] == null)
+                    {
+                        return false;
+                    }
+
+                    if (!IsSlotCurrentSelection(slot))
+                    {
+                        return false;
+                    }
+
+                    if (IsLoadOrderSlotRepeated(slot, index))
+                    {
+                        return false;
+                    }
+                }
+
+                index++;
+            }
+
+            return true;
         }
 
         private int CountValidSelectionSlots()

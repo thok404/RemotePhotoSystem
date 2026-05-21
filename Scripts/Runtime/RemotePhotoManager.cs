@@ -1029,6 +1029,7 @@ namespace RemotePhotoSystem
                 if (configuredPlayMode == RemotePhotoPlayMode.Random)
                 {
                     TryFulfillActiveRandomRequest();
+                    NotifyGroupsForCachedUrl(result.Url);
                 }
                 else
                 {
@@ -1739,7 +1740,7 @@ namespace RemotePhotoSystem
 
                 if (matched)
                 {
-                    group.RefreshCurrentSelectionFromManager();
+                    group.NotifyManagerCachedUrl(url);
                 }
 
                 groupIndex++;

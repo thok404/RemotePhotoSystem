@@ -337,6 +337,18 @@ namespace RemotePhotoSystem
             SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
         }
 
+        public void NotifyManagerCacheReady(VRCUrl url)
+        {
+            if (!RemotePhotoUrlUtility.IsValidVrcUrl(url) ||
+                string.IsNullOrEmpty(_pendingGalleryCacheUrl) ||
+                url.Get() != _pendingGalleryCacheUrl)
+            {
+                return;
+            }
+
+            TryApplyManagerCacheOrFailure();
+        }
+
         private bool TryApplyManagerCacheOrFailure()
         {
             if (_activeManager == null || !RemotePhotoUrlUtility.IsValidVrcUrl(_activeVrcUrl))
