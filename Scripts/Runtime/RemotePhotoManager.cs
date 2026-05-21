@@ -100,6 +100,10 @@ namespace RemotePhotoSystem
         private Texture2D[] _cachedTextures = new Texture2D[0];
         private IVRCImageDownload[] _cachedDownloads = new IVRCImageDownload[0];
         private int[] _cachedAccessTicks = new int[0];
+        private string[] _sequenceRecentUrlStrings = new string[0];
+        private Texture2D[] _sequenceRecentTextures = new Texture2D[0];
+        private IVRCImageDownload[] _sequenceRecentDownloads = new IVRCImageDownload[0];
+        private int[] _sequenceRecentAccessTicks = new int[0];
         private RemotePhotoFrame[] _displayedFrames = new RemotePhotoFrame[0];
         private string[] _displayedUrlStrings = new string[0];
         private IVRCImageDownload[] _displayedDownloads = new IVRCImageDownload[0];
@@ -261,6 +265,7 @@ namespace RemotePhotoSystem
             DisposeCurrentPreloadDownload();
             DisposeCachedDownloads();
             DisposeDisplayedDownloads();
+            DisposeSequenceRecentDownloads();
 
             if (_preloadDownloader != null)
             {
@@ -828,6 +833,19 @@ namespace RemotePhotoSystem
             int index = FindCachedUrlIndex(urlString);
             if (index < 0)
             {
+                int recentIndex = FindSequenceRecentUrlIndex(urlString);
+                if (recentIndex < 0)
+                {
+                    return;
+                }
+
+                _cacheAccessTick++;
+                _sequenceRecentAccessTicks[recentIndex] = _cacheAccessTick;
+                IVRCImageDownload recentDownload = _sequenceRecentDownloads[recentIndex];
+                ClearSequenceRecentWithoutDisposingAt(recentIndex);
+                MoveCachedDownloadToDisplayedFrame(frame, urlString, recentDownload);
+                LogDebug("Sequence recent cache retained by frame: " + urlString + ". Cached=" + GetCachedTextureCount() + "/" + GetMaxCachedTextures());
+                StartPreloadingQueue();
                 return;
             }
 
@@ -911,6 +929,15 @@ namespace RemotePhotoSystem
             int index = FindCachedUrlIndex(urlString);
             if (index < 0)
             {
+                int recentIndex = FindSequenceRecentUrlIndex(urlString);
+                if (recentIndex >= 0)
+                {
+                    _cacheAccessTick++;
+                    _sequenceRecentAccessTicks[recentIndex] = _cacheAccessTick;
+                    LogDebug("Sequence recent cache hit: " + urlString);
+                    return _sequenceRecentTextures[recentIndex];
+                }
+
                 if (logMiss)
                 {
                     LogDebug("Cache miss: " + urlString);
@@ -1879,6 +1906,16 @@ namespace RemotePhotoSystem
             return FindUrlInArray(landscape ? landscapeUrls : portraitUrls, urlString) >= 0;
         }
 
+        private bool IsUrlInAnyGalleryPoolString(string urlString)
+        {
+            if (string.IsNullOrEmpty(urlString))
+            {
+                return false;
+            }
+
+            return FindUrlInArray(landscapeUrls, urlString) >= 0 || FindUrlInArray(portraitUrls, urlString) >= 0;
+        }
+
         private void EnsurePreloadPoolSize(int landscapeCount, int portraitCount)
         {
             if (HasOrderedPreloadGroups())
@@ -2709,9 +2746,64 @@ namespace RemotePhotoSystem
             _cachedAccessTicks = nextAccessTicks;
         }
 
+        private void EnsureSequenceRecentCacheArrays()
+        {
+            int safeCapacity = GetSequenceRecentCacheCapacity();
+            int currentLength = _sequenceRecentUrlStrings == null ? 0 : _sequenceRecentUrlStrings.Length;
+            if (currentLength == safeCapacity)
+            {
+                return;
+            }
+
+            string[] nextUrlStrings = new string[safeCapacity];
+            Texture2D[] nextTextures = new Texture2D[safeCapacity];
+            IVRCImageDownload[] nextDownloads = new IVRCImageDownload[safeCapacity];
+            int[] nextAccessTicks = new int[safeCapacity];
+            int copyCount = currentLength;
+            if (copyCount > safeCapacity)
+            {
+                copyCount = safeCapacity;
+            }
+
+            int index = 0;
+            while (index < copyCount)
+            {
+                nextUrlStrings[index] = _sequenceRecentUrlStrings[index];
+                nextTextures[index] = _sequenceRecentTextures == null || index >= _sequenceRecentTextures.Length ? null : _sequenceRecentTextures[index];
+                nextDownloads[index] = _sequenceRecentDownloads == null || index >= _sequenceRecentDownloads.Length ? null : _sequenceRecentDownloads[index];
+                nextAccessTicks[index] = _sequenceRecentAccessTicks == null || index >= _sequenceRecentAccessTicks.Length ? 0 : _sequenceRecentAccessTicks[index];
+                index++;
+            }
+
+            while (index < currentLength)
+            {
+                if (_sequenceRecentDownloads != null && index < _sequenceRecentDownloads.Length && _sequenceRecentDownloads[index] != null)
+                {
+                    _sequenceRecentDownloads[index].Dispose();
+                }
+
+                index++;
+            }
+
+            _sequenceRecentUrlStrings = nextUrlStrings;
+            _sequenceRecentTextures = nextTextures;
+            _sequenceRecentDownloads = nextDownloads;
+            _sequenceRecentAccessTicks = nextAccessTicks;
+        }
+
         private int GetMaxCachedTextures()
         {
             return GetConfiguredPreloadCapacity() + GetTemporaryStagingCapacity();
+        }
+
+        private int GetSequenceRecentCacheCapacity()
+        {
+            if (configuredPlayMode == RemotePhotoPlayMode.Random)
+            {
+                return 0;
+            }
+
+            return CountManagedFrameSlots(true) + CountManagedFrameSlots(false);
         }
 
         private int GetFutureCacheCapacity()
@@ -2781,6 +2873,59 @@ namespace RemotePhotoSystem
             }
         }
 
+        private void DisposeSequenceRecentDownloads()
+        {
+            if (_sequenceRecentDownloads == null)
+            {
+                return;
+            }
+
+            int index = 0;
+            while (index < _sequenceRecentDownloads.Length)
+            {
+                DisposeSequenceRecentDownloadAt(index);
+                index++;
+            }
+        }
+
+        private void DisposeSequenceRecentDownloadAt(int index)
+        {
+            if (_sequenceRecentDownloads == null || index < 0 || index >= _sequenceRecentDownloads.Length)
+            {
+                return;
+            }
+
+            if (_sequenceRecentDownloads[index] != null)
+            {
+                _sequenceRecentDownloads[index].Dispose();
+            }
+
+            ClearSequenceRecentWithoutDisposingAt(index);
+        }
+
+        private void ClearSequenceRecentWithoutDisposingAt(int index)
+        {
+            if (_sequenceRecentUrlStrings != null && index >= 0 && index < _sequenceRecentUrlStrings.Length)
+            {
+                _sequenceRecentUrlStrings[index] = string.Empty;
+            }
+
+            if (_sequenceRecentTextures != null && index >= 0 && index < _sequenceRecentTextures.Length)
+            {
+                _sequenceRecentTextures[index] = null;
+            }
+
+            if (_sequenceRecentDownloads != null && index >= 0 && index < _sequenceRecentDownloads.Length)
+            {
+                _sequenceRecentDownloads[index] = null;
+            }
+
+            if (_sequenceRecentAccessTicks != null && index >= 0 && index < _sequenceRecentAccessTicks.Length)
+            {
+                _sequenceRecentAccessTicks[index] = 0;
+            }
+        }
+
         private void DisposeCachedDownloadAt(int index)
         {
             if (_cachedDownloads == null || index < 0 || index >= _cachedDownloads.Length)
@@ -2830,6 +2975,52 @@ namespace RemotePhotoSystem
             }
         }
 
+        private void TryMoveDisplayedSequenceDownloadToRecent(int displayedIndex)
+        {
+            if (configuredPlayMode == RemotePhotoPlayMode.Random ||
+                _displayedDownloads == null ||
+                _displayedUrlStrings == null ||
+                displayedIndex < 0 ||
+                displayedIndex >= _displayedDownloads.Length ||
+                displayedIndex >= _displayedUrlStrings.Length)
+            {
+                return;
+            }
+
+            IVRCImageDownload download = _displayedDownloads[displayedIndex];
+            string urlString = _displayedUrlStrings[displayedIndex];
+            if (download == null ||
+                download.Result == null ||
+                string.IsNullOrEmpty(urlString) ||
+                IsCachedDownload(download) ||
+                IsSequenceRecentDownload(download) ||
+                FindCachedUrlIndex(urlString) >= 0 ||
+                FindSequenceRecentUrlIndex(urlString) >= 0 ||
+                !IsUrlInAnyGalleryPoolString(urlString))
+            {
+                return;
+            }
+
+            int storeIndex = FindEmptySequenceRecentIndex();
+            if (storeIndex < 0)
+            {
+                storeIndex = FindLeastRecentlyUsedSequenceRecentIndex();
+            }
+
+            if (storeIndex < 0)
+            {
+                return;
+            }
+
+            DisposeSequenceRecentDownloadAt(storeIndex);
+            _cacheAccessTick++;
+            _sequenceRecentUrlStrings[storeIndex] = urlString;
+            _sequenceRecentTextures[storeIndex] = download.Result;
+            _sequenceRecentDownloads[storeIndex] = download;
+            _sequenceRecentAccessTicks[storeIndex] = _cacheAccessTick;
+            LogDebug("Sequence recent cache stored from displayed frame: " + urlString);
+        }
+
         public void ReleaseDisplayedDownload(RemotePhotoFrame frame)
         {
             int index = FindDisplayedFrameIndex(frame);
@@ -2840,6 +3031,7 @@ namespace RemotePhotoSystem
 
             if (_displayedDownloads[index] != null)
             {
+                TryMoveDisplayedSequenceDownloadToRecent(index);
                 DisposeDisplayedDownloadIfUncached(_displayedDownloads[index]);
                 _displayedDownloads[index] = null;
             }
@@ -2876,6 +3068,7 @@ namespace RemotePhotoSystem
 
             if (_displayedDownloads[index] != null && _displayedDownloads[index] != download)
             {
+                TryMoveDisplayedSequenceDownloadToRecent(index);
                 DisposeDisplayedDownloadIfUncached(_displayedDownloads[index]);
             }
 
@@ -2984,6 +3177,7 @@ namespace RemotePhotoSystem
             {
                 if (_displayedDownloads[index] != null)
                 {
+                    TryMoveDisplayedSequenceDownloadToRecent(index);
                     DisposeDisplayedDownloadIfUncached(_displayedDownloads[index]);
                     _displayedDownloads[index] = null;
                 }
@@ -3004,7 +3198,7 @@ namespace RemotePhotoSystem
 
         private void DisposeDisplayedDownloadIfUncached(IVRCImageDownload download)
         {
-            if (download == null || IsCachedDownload(download))
+            if (download == null || IsCachedDownload(download) || IsSequenceRecentDownload(download))
             {
                 return;
             }
@@ -3031,6 +3225,93 @@ namespace RemotePhotoSystem
             }
 
             return false;
+        }
+
+        private bool IsSequenceRecentDownload(IVRCImageDownload download)
+        {
+            EnsureSequenceRecentCacheArrays();
+            if (download == null || _sequenceRecentDownloads == null)
+            {
+                return false;
+            }
+
+            int index = 0;
+            while (index < _sequenceRecentDownloads.Length)
+            {
+                if (_sequenceRecentDownloads[index] == download)
+                {
+                    return true;
+                }
+
+                index++;
+            }
+
+            return false;
+        }
+
+        private int FindSequenceRecentUrlIndex(string url)
+        {
+            EnsureSequenceRecentCacheArrays();
+            if (string.IsNullOrEmpty(url) || _sequenceRecentUrlStrings == null)
+            {
+                return -1;
+            }
+
+            int index = 0;
+            while (index < _sequenceRecentUrlStrings.Length)
+            {
+                if (_sequenceRecentTextures[index] != null &&
+                    _sequenceRecentDownloads[index] != null &&
+                    _sequenceRecentUrlStrings[index] == url)
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        private int FindEmptySequenceRecentIndex()
+        {
+            EnsureSequenceRecentCacheArrays();
+            int index = 0;
+            while (_sequenceRecentUrlStrings != null && index < _sequenceRecentUrlStrings.Length)
+            {
+                if (_sequenceRecentTextures[index] == null || string.IsNullOrEmpty(_sequenceRecentUrlStrings[index]))
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        private int FindLeastRecentlyUsedSequenceRecentIndex()
+        {
+            EnsureSequenceRecentCacheArrays();
+            int bestIndex = -1;
+            int bestTick = 0;
+            int index = 0;
+            while (_sequenceRecentUrlStrings != null && index < _sequenceRecentUrlStrings.Length)
+            {
+                if (_sequenceRecentTextures[index] != null && _sequenceRecentDownloads[index] != null)
+                {
+                    int tick = _sequenceRecentAccessTicks == null || index >= _sequenceRecentAccessTicks.Length ? 0 : _sequenceRecentAccessTicks[index];
+                    if (bestIndex < 0 || tick < bestTick)
+                    {
+                        bestIndex = index;
+                        bestTick = tick;
+                    }
+                }
+
+                index++;
+            }
+
+            return bestIndex;
         }
 
         private int FindCachedUrlIndex(string url)
