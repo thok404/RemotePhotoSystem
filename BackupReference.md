@@ -520,36 +520,35 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Preserve Lit Shader Albedo while displaying remote photos
+    summary: Improve Sequence + Preload cache reuse and current-page wakeup
     commit:
-      hash: 0846248
-      message: Preserve lit material albedo for photo frames
+      hash: 26c6b78
+      message: Improve sequence preload cache reuse
     files_changed:
-      - Scripts/Runtime/RemotePhotoFrame.cs
-      - Scripts/Editor/RemotePhotoFrameDisplayLitShaderGUI.cs
-      - Scripts/Editor/RemotePhotoFrameEditor.cs
-      - Shaders/RemotePhotoFrameDisplayLit.shader
+      - Scripts/Runtime/RemotePhotoManager.cs
+      - Scripts/Runtime/RemotePhotoManager.asset
+      - Samples/SAMPLE_SCENE.unity
     behavior_changes:
-      - Lit Shader uses _RemotePhotoImageTex as the remote photo slot
-      - Lit Shader keeps _MainTex and _Color as Albedo surface data
-      - Frame writes photos to the Lit Shader internal photo slot when available
-      - Unlit and custom shaders continue using texturePropertyName
-      - Texture Mix controls how strongly Lit Albedo multiplies the photo
-      - non-default Lit Albedo disables Background Color and uses Albedo as background
-      - Frame Inspector shows an info box when Lit Albedo disables Background Color
-      - Smoothness Source Albedo Alpha reads Albedo alpha, not remote photo alpha
-      - photo fit UV for Lit Shader uses _RemotePhotoImageTex UV to keep Crop/Contain/Tile behavior
+      - Sequence mode now keeps a small recent cache for images that just left frames
+      - displayed Sequence image handles can move into the recent cache instead of being disposed immediately
+      - Sequence recent cache is separate from configured future preload capacity
+      - Sequence cache hits can be retained by frames from either Manager cache or recent cache
+      - Manager now notifies groups by exact cached URL for Sequence and Random paths
+      - exact URL notification prevents same-revision signature dedupe from blocking waiting frames
     validation:
       - dotnet build PhotoFrame.sln -nologo passed
-      - Unity Shader refresh still required for final editor-side shader import validation
-    excluded_local_changes:
-      - Samples/SAMPLE_SCENE.unity contains an unrelated empty reference change and was not committed
+      - current git status was clean after push to origin/main
+    release_assets:
+      local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
+      local_unitypackage_size: 7481138
+      local_webtool_zip: Release/RemotePhotoSystem_WebTool_v1.00.zip
+      local_webtool_zip_size: 14208
+      note: Release folder is local release staging and is not tracked by git.
     pending_runtime_tests:
-      - UdonSharp compile in Unity after serialized Udon asset refresh if Unity regenerates program assets
-      - Lit Shader default Albedo keeps Background Color behavior
-      - Lit Shader non-default Albedo preserves scratches, dirt, normal map, metallic, and smoothness
-      - Texture Mix keeps photos visible on dark or black Albedo materials
-      - MeshUv and Box projection retain correct photo fit without stretching
+      - Sequence + Preload rapid Previous/Next should reuse recently displayed pages when capacity allows
+      - Sequence + Preload current page downloads should wake the exact waiting frames
+      - multi-frame Sequence pages should keep frame-slot mapping stable across fast page changes
+      - GitHub Release 1.0 asset should be overwritten with local Release/RemotePhotoSystem_v1.00.unitypackage
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/
