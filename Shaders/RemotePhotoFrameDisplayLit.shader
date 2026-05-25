@@ -11,6 +11,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         [HideInInspector] _RemotePhotoFitMode ("Remote Photo Fit Mode", Float) = 0
         [HideInInspector] _PhotoRotationDegrees ("Photo Rotation Degrees", Range(0, 360)) = 0
         [HideInInspector] _RemotePhotoProjectionMode ("Remote Photo Projection Mode", Float) = 0
+        [HideInInspector] _RemotePhotoCullMode ("Remote Photo Cull Mode", Float) = 2
         [HideInInspector] _RemotePhotoShortestAxis ("Remote Photo Shortest Axis", Float) = 2
         [HideInInspector] _RemotePhotoBoundsCenterX ("Remote Photo Bounds Center X", Float) = 0
         [HideInInspector] _RemotePhotoBoundsCenterY ("Remote Photo Bounds Center Y", Float) = 0
@@ -36,6 +37,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" }
         LOD 200
+        Cull [_RemotePhotoCullMode]
 
         CGPROGRAM
         #pragma surface surf Standard fullforwardshadows vertex:vert

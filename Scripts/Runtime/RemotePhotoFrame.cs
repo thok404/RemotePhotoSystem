@@ -18,6 +18,7 @@ namespace RemotePhotoSystem
         public Texture fallbackTexture;
         public RemotePhotoFitMode photoFitMode = RemotePhotoFitMode.Contain;
         public RemotePhotoProjectionMode projectionMode = RemotePhotoProjectionMode.MeshUv;
+        public bool meshUvDoubleSided;
         public bool boxProjectionHorizontalFlip;
         [Range(0f, 360f)]
         public float photoRotationDegrees;
@@ -73,6 +74,7 @@ namespace RemotePhotoSystem
         private const string RemotePhotoFitModePropertyName = "_RemotePhotoFitMode";
         private const string PhotoRotationDegreesPropertyName = "_PhotoRotationDegrees";
         private const string RemotePhotoProjectionModePropertyName = "_RemotePhotoProjectionMode";
+        private const string RemotePhotoCullModePropertyName = "_RemotePhotoCullMode";
         private const string RemotePhotoShortestAxisPropertyName = "_RemotePhotoShortestAxis";
         private const string RemotePhotoBoundsCenterXPropertyName = "_RemotePhotoBoundsCenterX";
         private const string RemotePhotoBoundsCenterYPropertyName = "_RemotePhotoBoundsCenterY";
@@ -801,6 +803,7 @@ namespace RemotePhotoSystem
         private void ApplyProjectionProperties()
         {
             _runtimeMaterial.SetFloat(RemotePhotoProjectionModePropertyName, GetProjectionModeFloat());
+            _runtimeMaterial.SetFloat(RemotePhotoCullModePropertyName, GetCullModeFloat());
             _runtimeMaterial.SetFloat(RemotePhotoBoxHorizontalFlipPropertyName, GetBoxHorizontalFlipFloat());
             _runtimeMaterial.SetFloat(RemotePhotoShortestAxisPropertyName, GetAxisFloat(_cachedShortestAxis));
             _runtimeMaterial.SetFloat(RemotePhotoBoundsCenterXPropertyName, _cachedBoundsCenter.x);
@@ -1170,6 +1173,16 @@ namespace RemotePhotoSystem
             }
 
             return 0f;
+        }
+
+        private float GetCullModeFloat()
+        {
+            if (projectionMode == RemotePhotoProjectionMode.MeshUv && meshUvDoubleSided)
+            {
+                return 0f;
+            }
+
+            return 2f;
         }
 
         private float GetBoxHorizontalFlipFloat()

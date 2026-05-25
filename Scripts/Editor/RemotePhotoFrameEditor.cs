@@ -128,6 +128,17 @@ namespace RemotePhotoSystem.Editor
                     "选择网格 UV 或 Box 正反面投射。",
                     "메쉬 UV 또는 Box 앞/뒤 면 투영을 선택합니다."));
 
+            if (projectionMode == RemotePhotoProjectionMode.MeshUv)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("meshUvDoubleSided"),
+                    G(language,
+                        "Double Sided", "両面描画", "双面渲染", "양면 렌더링",
+                        "Render both sides in Mesh UV mode.",
+                        "Mesh UV モードで両面を描画します。",
+                        "在 Mesh UV 模式下渲染模型正反两面。",
+                        "Mesh UV 모드에서 양면을 렌더링합니다."));
+            }
+
             if (projectionMode == RemotePhotoProjectionMode.Box)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("boxProjectionHorizontalFlip"),

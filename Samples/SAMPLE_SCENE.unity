@@ -409,6 +409,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
@@ -774,6 +775,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
@@ -1043,6 +1045,7 @@ MonoBehaviour:
   loadOnceOnStart: 1
   loadOnceDelaySeconds: 1
   managedGroups:
+  - {fileID: 1926705392}
   - {fileID: 1194479642}
   - {fileID: 568022271}
   debugLogs: 0
@@ -1599,6 +1602,7 @@ Transform:
   m_Children:
   - {fileID: 1194479643}
   - {fileID: 568022272}
+  - {fileID: 1926705390}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1787983409
@@ -1695,6 +1699,99 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 51.55, y: 42.622, z: -3.285}
+--- !u!1 &1926705389
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1926705390}
+  - component: {fileID: 1926705392}
+  - component: {fileID: 1926705391}
+  m_Layer: 0
+  m_Name: FrameGroupTEST
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1926705390
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926705389}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1490104452}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1926705391
+MonoBehaviour:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926705389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 3
+  serializedProgramAsset: {fileID: 11400000, guid: 5c9ef91b80f6e0346afd034906df55bc, type: 2}
+  programSource: {fileID: 11400000, guid: cd97c3123f2dce64ab8724f120348bac, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!114 &1926705392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926705389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ebf076354d198147a6a6afc55c8d79e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 1926705391}
+  manager: {fileID: 1490104451}
+  triggerCooldownSeconds: 2
+  targets:
+  - {fileID: 0}
+  syncedUrls: []
+  syncedLoadOrderSlots: 
+  syncedSlotRequestIds: 
+  selectionRevision: 0
+  selectionSessionId: 0
+  selectionSequentialApply: 0
+  loadOrderRevision: 0
+  nextAllowedTriggerServerTime: 0
+  lastTriggerError: 
 --- !u!1 &1956463998
 GameObject:
   m_ObjectHideFlags: 0
@@ -1872,6 +1969,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 1
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
@@ -2630,6 +2728,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1c458f68c6e79ec48b435153bac23035, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
@@ -3675,6 +3774,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
@@ -4361,6 +4461,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 96a95505a14dbe74ea5ffa16ce5a4b0f, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
@@ -4881,6 +4982,10 @@ MonoBehaviour:
     ID: 68
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 1926705389}
+    ID: 74
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}
   portraitCameraRotationOffset: {x: 0, y: 1, z: 0, w: -0.00000004371139}
   PlayerPersistence: []
@@ -5382,6 +5487,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 1c458f68c6e79ec48b435153bac23035, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
@@ -5780,6 +5886,7 @@ MonoBehaviour:
   fallbackTexture: {fileID: 2800000, guid: 96a95505a14dbe74ea5ffa16ce5a4b0f, type: 3}
   photoFitMode: 1
   projectionMode: 0
+  meshUvDoubleSided: 1
   boxProjectionHorizontalFlip: 0
   photoRotationDegrees: 0
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
