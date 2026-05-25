@@ -16,7 +16,7 @@ namespace RemotePhotoSystem
         public Texture defaultTexture;
         public bool useFallbackTexture = true;
         public Texture fallbackTexture;
-        public RemotePhotoFitMode photoFitMode = RemotePhotoFitMode.Crop;
+        public RemotePhotoFitMode photoFitMode = RemotePhotoFitMode.Contain;
         public RemotePhotoProjectionMode projectionMode = RemotePhotoProjectionMode.MeshUv;
         public bool boxProjectionHorizontalFlip;
         [Range(0f, 360f)]
