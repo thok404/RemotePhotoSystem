@@ -520,24 +520,27 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Improve Sequence + Preload cache reuse and current-page wakeup
+    summary: Add Mesh UV double-sided rendering option for Frame shaders
     commit:
-      hash: 26c6b78
-      message: Improve sequence preload cache reuse
+      hash: 2c8f9b8
+      message: Add mesh UV double sided frame option
     files_changed:
-      - Scripts/Runtime/RemotePhotoManager.cs
-      - Scripts/Runtime/RemotePhotoManager.asset
+      - Scripts/Runtime/RemotePhotoFrame.cs
+      - Scripts/Runtime/RemotePhotoFrame.asset
+      - Scripts/Editor/RemotePhotoFrameEditor.cs
+      - Shaders/RemotePhotoFrameDisplayLit.shader
+      - Shaders/RemotePhotoFrameDisplayUnlit.shader
       - Samples/SAMPLE_SCENE.unity
     behavior_changes:
-      - Sequence mode now keeps a small recent cache for images that just left frames
-      - displayed Sequence image handles can move into the recent cache instead of being disposed immediately
-      - Sequence recent cache is separate from configured future preload capacity
-      - Sequence cache hits can be retained by frames from either Manager cache or recent cache
-      - Manager now notifies groups by exact cached URL for Sequence and Random paths
-      - exact URL notification prevents same-revision signature dedupe from blocking waiting frames
+      - Frame has a Mesh UV only Double Sided toggle
+      - Double Sided writes _RemotePhotoCullMode = 0 only when Projection Mode is Mesh UV
+      - Box projection always writes _RemotePhotoCullMode = 2 to keep current front/back behavior
+      - Lit and Unlit project shaders both support hidden _RemotePhotoCullMode
+      - Frame Inspector shows Double Sided only for Mesh UV projection
+      - Photo loading, preload, sync, Random, Sequence, and JSON behavior are unchanged
     validation:
       - dotnet build PhotoFrame.sln -nologo passed
-      - current git status was clean after push to origin/main
+      - Unity shader import validation still required inside Unity editor
     release_assets:
       local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
       local_unitypackage_size: 7481138
@@ -545,10 +548,10 @@ codex_project_backup:
       local_webtool_zip_size: 14208
       note: Release folder is local release staging and is not tracked by git.
     pending_runtime_tests:
-      - Sequence + Preload rapid Previous/Next should reuse recently displayed pages when capacity allows
-      - Sequence + Preload current page downloads should wake the exact waiting frames
-      - multi-frame Sequence pages should keep frame-slot mapping stable across fast page changes
-      - GitHub Release 1.0 asset should be overwritten with local Release/RemotePhotoSystem_v1.00.unitypackage
+      - Unlit + Mesh UV default remains single-sided
+      - Unlit + Mesh UV Double Sided renders front and back faces
+      - Lit + Mesh UV Double Sided preserves Albedo, Texture Mix, Normal, Metallic, and Smoothness behavior
+      - Box projection remains single-sided regardless of Double Sided field value
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/
