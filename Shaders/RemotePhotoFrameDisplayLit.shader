@@ -7,6 +7,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         [HideInInspector] _RemotePhotoPreloadTex ("Remote Photo Preload Texture", 2D) = "white" {}
         _RemotePhotoBackgroundColor ("Background Color", Color) = (0, 0, 0, 1)
         _RemotePhotoAlbedoInfluence ("Texture Mix", Range(0, 1)) = 0.5
+        [Enum(UV0,0,UV1,1)] _RemotePhotoSurfaceUvSet ("Surface UV Set", Float) = 0
         [HideInInspector] _RemotePhotoUseAlbedoBackground ("Use Albedo Background", Float) = 0
         [HideInInspector] _RemotePhotoFitMode ("Remote Photo Fit Mode", Float) = 0
         [HideInInspector] _PhotoRotationDegrees ("Photo Rotation Degrees", Range(0, 360)) = 0
@@ -45,8 +46,10 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
 
         sampler2D _MainTex;
         sampler2D _RemotePhotoImageTex;
+        float4 _RemotePhotoImageTex_ST;
         fixed4 _RemotePhotoBackgroundColor;
         half _RemotePhotoAlbedoInfluence;
+        half _RemotePhotoSurfaceUvSet;
         half _RemotePhotoUseAlbedoBackground;
         float _RemotePhotoFitMode;
         float _PhotoRotationDegrees;
@@ -73,8 +76,8 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
 
         struct Input
         {
-            float2 uv_MainTex;
-            float2 uv_RemotePhotoImageTex;
+            float2 photoUv;
+            float2 surfaceUv;
             float3 localPos;
             float3 localNormal;
         };
@@ -82,6 +85,8 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
         void vert(inout appdata_full v, out Input o)
         {
             UNITY_INITIALIZE_OUTPUT(Input, o);
+            o.photoUv = (v.texcoord.xy * _RemotePhotoImageTex_ST.xy) + _RemotePhotoImageTex_ST.zw;
+            o.surfaceUv = _RemotePhotoSurfaceUvSet > 0.5 ? v.texcoord1.xy : v.texcoord.xy;
             o.localPos = v.vertex.xyz;
             o.localNormal = v.normal;
         }
@@ -166,7 +171,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             bool usesBoxProjection = _RemotePhotoProjectionMode > 0.5;
             bool isPhotoFace = !usesBoxProjection || dominantAxis == shortestAxis;
 
-            float2 baseUv = usesBoxProjection ? BuildBoxProjectionUv(IN.localPos) : IN.uv_RemotePhotoImageTex;
+            float2 baseUv = usesBoxProjection ? BuildBoxProjectionUv(IN.localPos) : IN.photoUv;
             if (usesBoxProjection && GetAxisValue(IN.localNormal, shortestAxis) < 0.0)
             {
                 baseUv.x = 1.0 - baseUv.x;
@@ -177,7 +182,7 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             }
 
             float2 uv = RotatePhotoUv(baseUv);
-            fixed4 albedo = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+            fixed4 albedo = tex2D(_MainTex, IN.surfaceUv) * _Color;
             fixed4 photo = tex2D(_RemotePhotoImageTex, uv);
             half useAlbedoBackground = _RemotePhotoUseAlbedoBackground;
             half3 albedoDelta = abs(_Color.rgb - half3(1.0, 1.0, 1.0));
@@ -202,12 +207,12 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
                 }
             }
 
-            fixed4 metallicGloss = tex2D(_MetallicGlossMap, IN.uv_MainTex);
+            fixed4 metallicGloss = tex2D(_MetallicGlossMap, IN.surfaceUv);
             half smoothnessMask = _SmoothnessTextureChannel > 0.5 ? albedo.a : metallicGloss.a;
             o.Albedo = c.rgb;
             o.Metallic = _Metallic * metallicGloss.r;
             o.Smoothness = _Glossiness * smoothnessMask;
-            o.Normal = UnpackScaleNormal(tex2D(_BumpMap, IN.uv_MainTex), _BumpScale);
+            o.Normal = UnpackScaleNormal(tex2D(_BumpMap, IN.surfaceUv), _BumpScale);
         }
         ENDCG
     }

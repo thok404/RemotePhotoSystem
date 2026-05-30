@@ -1783,6 +1783,11 @@ MonoBehaviour:
   triggerCooldownSeconds: 2
   targets:
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   syncedUrls: []
   syncedLoadOrderSlots: 
   syncedSlotRequestIds: 
@@ -4984,6 +4989,10 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 1926705389}
     ID: 74
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 0}
+    ID: 75
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

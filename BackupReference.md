@@ -6,7 +6,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-05-21
+  current_date_recorded: 2026-05-31
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -520,23 +520,22 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Add Mesh UV double-sided rendering option for Frame shaders
+    summary: Add Lit surface UV set and simplify Frame texture-slot UI
     commit:
-      hash: 2c8f9b8
-      message: Add mesh UV double sided frame option
+      message: Add Lit surface UV set support
     files_changed:
-      - Scripts/Runtime/RemotePhotoFrame.cs
-      - Scripts/Runtime/RemotePhotoFrame.asset
       - Scripts/Editor/RemotePhotoFrameEditor.cs
       - Shaders/RemotePhotoFrameDisplayLit.shader
-      - Shaders/RemotePhotoFrameDisplayUnlit.shader
+      - Scripts/Editor/RemotePhotoFrameDisplayLitShaderGUI.cs
       - Samples/SAMPLE_SCENE.unity
     behavior_changes:
-      - Frame has a Mesh UV only Double Sided toggle
-      - Double Sided writes _RemotePhotoCullMode = 0 only when Projection Mode is Mesh UV
-      - Box projection always writes _RemotePhotoCullMode = 2 to keep current front/back behavior
-      - Lit and Unlit project shaders both support hidden _RemotePhotoCullMode
-      - Frame Inspector shows Double Sided only for Mesh UV projection
+      - Lit Shader adds Surface UV Set with UV0 and UV1 choices for the surface material layer
+      - remote photo texture still uses the existing photo UV and Frame fit/projection parameters
+      - Albedo, Normal, Metallic, and Smoothness sampling use the selected Surface UV Set
+      - Texture Mix is displayed directly after Surface UV Set in the Lit material Inspector
+      - Normal Map tiling and offset UI remains hidden so material layout is driven by mesh UVs
+      - Frame Inspector no longer shows the texturePropertyName field
+      - the hidden texturePropertyName runtime field is still kept for existing runtime/custom shader logic
       - Photo loading, preload, sync, Random, Sequence, and JSON behavior are unchanged
     validation:
       - dotnet build PhotoFrame.sln -nologo passed
@@ -548,10 +547,10 @@ codex_project_backup:
       local_webtool_zip_size: 14208
       note: Release folder is local release staging and is not tracked by git.
     pending_runtime_tests:
-      - Unlit + Mesh UV default remains single-sided
-      - Unlit + Mesh UV Double Sided renders front and back faces
-      - Lit + Mesh UV Double Sided preserves Albedo, Texture Mix, Normal, Metallic, and Smoothness behavior
-      - Box projection remains single-sided regardless of Double Sided field value
+      - Lit + Mesh UV Surface UV Set UV0 matches previous material sampling behavior
+      - Lit + Mesh UV Surface UV Set UV1 uses UV1 for Albedo, Normal, Metallic, and Smoothness while photo stays on photo UV
+      - Lit + Box projection keeps Box photo projection while surface material follows selected Surface UV Set
+      - Frame Inspector hides Texture Property and still displays Material Slot
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/

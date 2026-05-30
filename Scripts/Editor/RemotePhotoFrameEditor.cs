@@ -69,13 +69,6 @@ namespace RemotePhotoSystem.Editor
                     "写真を書き込むマテリアルを選びます。",
                     "选择要写入图片的材质。",
                     "사진을 넣을 머티리얼을 선택합니다."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("texturePropertyName"),
-                G(language,
-                    "Texture Property", "テクスチャプロパティ", "贴图属性名", "텍스처 프로퍼티",
-                    "Target texture slot for Unlit or custom Shaders. Project Lit Shader uses its internal photo slot.",
-                    "Unlit またはカスタム Shader の書き込み先です。プロジェクト Lit Shader は内部の写真スロットを使います。",
-                    "Unlit 或自定义 Shader 的写入槽。项目 Lit Shader 会使用内部照片槽。",
-                    "Unlit 또는 커스텀 Shader의 대상 슬롯입니다. 프로젝트 Lit Shader는 내부 사진 슬롯을 사용합니다."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultTexture"),
                 G(language,
                     "Default Texture", "デフォルトテクスチャ", "默认贴图", "기본 텍스처",

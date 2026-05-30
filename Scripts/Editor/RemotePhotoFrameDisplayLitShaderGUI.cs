@@ -26,7 +26,9 @@ namespace RemotePhotoSystem.Editor
         private static readonly GUIContent NormalMapLabel = new GUIContent("Normal Map");
         private static readonly GUIContent SmoothnessSourceLabel = new GUIContent("Source");
         private static readonly GUIContent TextureMixLabel = new GUIContent("Texture Mix");
+        private static readonly GUIContent SurfaceUvSetLabel = new GUIContent("Surface UV Set");
         private static readonly string[] SmoothnessSources = { "Metallic Alpha", "Albedo Alpha" };
+        private static readonly string[] SurfaceUvSets = { "UV0", "UV1" };
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
         {
@@ -39,10 +41,13 @@ namespace RemotePhotoSystem.Editor
             MaterialProperty normalMap = FindProperty("_BumpMap", properties);
             MaterialProperty normalScale = FindProperty("_BumpScale", properties);
             MaterialProperty photoAlbedoInfluence = FindProperty("_RemotePhotoAlbedoInfluence", properties);
+            MaterialProperty surfaceUvSet = FindProperty("_RemotePhotoSurfaceUvSet", properties);
             MaterialProperty useAlbedoBackground = FindProperty("_RemotePhotoUseAlbedoBackground", properties, false);
 
-            materialEditor.TexturePropertySingleLine(AlbedoLabel, albedoTexture, albedoColor);
+            int surfaceUvSetIndex = Mathf.Clamp(Mathf.RoundToInt(surfaceUvSet.floatValue), 0, SurfaceUvSets.Length - 1);
+            surfaceUvSet.floatValue = EditorGUILayout.Popup(SurfaceUvSetLabel, surfaceUvSetIndex, SurfaceUvSets);
             materialEditor.RangeProperty(photoAlbedoInfluence, TextureMixLabel.text);
+            materialEditor.TexturePropertySingleLine(AlbedoLabel, albedoTexture, albedoColor);
             if (useAlbedoBackground != null)
             {
                 Color color = albedoColor.colorValue;
@@ -63,12 +68,6 @@ namespace RemotePhotoSystem.Editor
             EditorGUI.indentLevel--;
 
             materialEditor.TexturePropertySingleLine(NormalMapLabel, normalMap, normalScale);
-            if (normalMap.textureValue != null)
-            {
-                EditorGUI.indentLevel++;
-                materialEditor.TextureScaleOffsetProperty(normalMap);
-                EditorGUI.indentLevel--;
-            }
 
             EditorGUILayout.Space();
             materialEditor.EnableInstancingField();
