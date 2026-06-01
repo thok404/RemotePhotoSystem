@@ -154,10 +154,10 @@ namespace RemotePhotoSystem.Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("aspectMode"),
                 G(language,
                     "Aspect Mode", "アスペクトモード", "画幅比例模式", "비율 모드",
-                    "Sets the Frame ratio used by fit modes.",
-                    "Fit Mode が使う Frame 比率を設定します。",
-                    "设置适配模式使用的 Frame 比例。",
-                    "Fit Mode가 사용할 Frame 비율을 설정합니다."));
+                    "Sets the Frame ratio used by fit modes. Photo Surface uses mesh surface bounds without swapping width and height.",
+                    "Fit Mode が使う Frame 比率を設定します。Photo Surface は幅と高さを入れ替えずにメッシュ面 bounds を使います。",
+                    "设置适配模式使用的 Frame 比例。Photo Surface 使用网格表面包围盒，且不交换宽高。",
+                    "Fit Mode가 사용할 Frame 비율을 설정합니다. Photo Surface는 너비와 높이를 바꾸지 않고 메시 표면 bounds를 사용합니다."));
 
             RemotePhotoAspectMode aspectMode =
                 (RemotePhotoAspectMode)serializedObject.FindProperty("aspectMode").enumValueIndex;

@@ -1014,6 +1014,14 @@ namespace RemotePhotoSystem
                     return rendererAspect;
                 }
             }
+            else if (aspectMode == RemotePhotoAspectMode.PhotoSurface)
+            {
+                float surfaceAspect = TryGetPhotoSurfaceAspectRatio();
+                if (surfaceAspect > 0f)
+                {
+                    return surfaceAspect;
+                }
+            }
 
             return 0f;
         }
@@ -1051,6 +1059,43 @@ namespace RemotePhotoSystem
             }
 
             return BuildAspectRatio(_meshFilter.sharedMesh.bounds.size, RemotePhotoAxisMode.Auto);
+        }
+
+        private float TryGetPhotoSurfaceAspectRatio()
+        {
+            if (_meshFilter == null)
+            {
+                _meshFilter = GetComponent<MeshFilter>();
+            }
+
+            if (_meshFilter == null || _meshFilter.sharedMesh == null)
+            {
+                return 0f;
+            }
+
+            Vector3 size = _meshFilter.sharedMesh.bounds.size;
+            int thicknessAxis = GetShortestAxis(size);
+            int widthAxis = 0;
+            int heightAxis = 1;
+            if (thicknessAxis == 0)
+            {
+                widthAxis = 1;
+                heightAxis = 2;
+            }
+            else if (thicknessAxis == 1)
+            {
+                widthAxis = 0;
+                heightAxis = 2;
+            }
+
+            float width = GetAxisSize(size, (RemotePhotoAxis)widthAxis);
+            float height = GetAxisSize(size, (RemotePhotoAxis)heightAxis);
+            if (width <= 0f || height <= 0f)
+            {
+                return 0f;
+            }
+
+            return width / height;
         }
 
         private void RefreshCachedProjectionGeometry()

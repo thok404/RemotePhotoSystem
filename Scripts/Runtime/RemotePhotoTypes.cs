@@ -48,7 +48,8 @@ namespace RemotePhotoSystem
     {
         Manual = 0,
         Auto = 1,
-        ReferenceBox = 2
+        ReferenceBox = 2,
+        PhotoSurface = 3
     }
 
     public enum RemotePhotoAxis

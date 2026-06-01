@@ -6,7 +6,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-05-31
+  current_date_recorded: 2026-06-02
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -175,6 +175,8 @@ codex_project_backup:
         - Manual uses manualAspectRatio and hides axisMode
         - Auto uses mesh bounds and always discards the shortest dimension
         - ReferenceBox uses referenceBoxSize
+        - PhotoSurface uses mesh surface bounds and does not swap width and height
+        - PhotoSurface supports aspect ratios below 1 for vertically oriented irregular photo surfaces
         - ReferenceBox is the only aspect mode that exposes axisMode
         - ReferenceBox axisMode Auto discards the shortest reference-box dimension
         - ReferenceBox axisMode ManualAxes uses frameWidthAxis and frameHeightAxis
@@ -520,26 +522,25 @@ codex_project_backup:
     - if preload release stability is poor, keep NonPreload as stable path
 
   latest_local_work:
-    summary: Add Lit surface UV set and simplify Frame texture-slot UI
+    summary: Add Photo Surface aspect mode for irregular frame surfaces
     commit:
-      message: Add Lit surface UV set support
+      message: Add Photo Surface aspect mode
     files_changed:
+      - Scripts/Runtime/RemotePhotoTypes.cs
+      - Scripts/Runtime/RemotePhotoFrame.cs
       - Scripts/Editor/RemotePhotoFrameEditor.cs
-      - Shaders/RemotePhotoFrameDisplayLit.shader
-      - Scripts/Editor/RemotePhotoFrameDisplayLitShaderGUI.cs
       - Samples/SAMPLE_SCENE.unity
     behavior_changes:
-      - Lit Shader adds Surface UV Set with UV0 and UV1 choices for the surface material layer
-      - remote photo texture still uses the existing photo UV and Frame fit/projection parameters
-      - Albedo, Normal, Metallic, and Smoothness sampling use the selected Surface UV Set
-      - Texture Mix is displayed directly after Surface UV Set in the Lit material Inspector
-      - Normal Map tiling and offset UI remains hidden so material layout is driven by mesh UVs
-      - Frame Inspector no longer shows the texturePropertyName field
-      - the hidden texturePropertyName runtime field is still kept for existing runtime/custom shader logic
-      - Photo loading, preload, sync, Random, Sequence, and JSON behavior are unchanged
+      - Aspect Mode adds Photo Surface
+      - Photo Surface calculates width/height from mesh local bounds after removing the shortest thickness axis
+      - Photo Surface does not swap width and height, so values below 1 are valid
+      - Photo Surface is intended for irregular photo surfaces such as vertical hexagon, heart, star, or circular photo meshes
+      - existing Auto aspect behavior is unchanged
+      - ReferenceBox and Manual aspect behavior are unchanged
+      - Photo loading, preload, sync, Random, Sequence, Shader, and JSON behavior are unchanged
     validation:
       - dotnet build PhotoFrame.sln -nologo passed
-      - Unity shader import validation still required inside Unity editor
+      - Unity/UdonSharp import validation still required inside Unity editor
     release_assets:
       local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
       local_unitypackage_size: 7481138
@@ -547,10 +548,10 @@ codex_project_backup:
       local_webtool_zip_size: 14208
       note: Release folder is local release staging and is not tracked by git.
     pending_runtime_tests:
-      - Lit + Mesh UV Surface UV Set UV0 matches previous material sampling behavior
-      - Lit + Mesh UV Surface UV Set UV1 uses UV1 for Albedo, Normal, Metallic, and Smoothness while photo stays on photo UV
-      - Lit + Box projection keeps Box photo projection while surface material follows selected Surface UV Set
-      - Frame Inspector hides Texture Property and still displays Material Slot
+      - Photo Surface returns a value below 1 for a vertically oriented pointed hexagon photo mesh
+      - Photo Surface result is stable when the GameObject is rotated in the scene
+      - Photo Surface works best when the Frame object mesh bounds match the actual photo surface bounds
+      - Auto still returns the previous long-edge-oriented ratio for ordinary frame meshes
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/
