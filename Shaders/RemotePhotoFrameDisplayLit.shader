@@ -182,20 +182,27 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
             }
 
             float2 uv = RotatePhotoUv(baseUv);
-            fixed4 albedo = tex2D(_MainTex, IN.surfaceUv) * _Color;
-            fixed4 photo = tex2D(_RemotePhotoImageTex, uv);
-            half useAlbedoBackground = _RemotePhotoUseAlbedoBackground;
+            half textureMix = saturate(_RemotePhotoAlbedoInfluence);
+            half useAlbedoBackground = textureMix > 0.001 ? _RemotePhotoUseAlbedoBackground : 0.0;
             half3 albedoDelta = abs(_Color.rgb - half3(1.0, 1.0, 1.0));
             if (albedoDelta.r + albedoDelta.g + albedoDelta.b > 0.001 || abs(_Color.a - 1.0) > 0.001)
             {
                 useAlbedoBackground = 1.0;
             }
+            if (textureMix <= 0.001)
+            {
+                useAlbedoBackground = 0.0;
+            }
+
+            half needsAlbedo = textureMix > 0.001 || useAlbedoBackground > 0.5 || _SmoothnessTextureChannel > 0.5;
+            fixed4 albedo = needsAlbedo ? tex2D(_MainTex, IN.surfaceUv) * _Color : fixed4(1.0, 1.0, 1.0, 1.0);
+            fixed4 photo = tex2D(_RemotePhotoImageTex, uv);
 
             fixed4 background = useAlbedoBackground > 0.5 ? albedo : _RemotePhotoBackgroundColor;
             fixed4 c = background;
             if (isPhotoFace)
             {
-                fixed3 albedoMultiplier = lerp(fixed3(1.0, 1.0, 1.0), albedo.rgb, saturate(_RemotePhotoAlbedoInfluence));
+                fixed3 albedoMultiplier = lerp(fixed3(1.0, 1.0, 1.0), albedo.rgb, textureMix);
                 c = fixed4(photo.rgb * albedoMultiplier, photo.a);
             }
 

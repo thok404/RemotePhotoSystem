@@ -6,7 +6,7 @@ codex_project_backup:
   github_remote: https://github.com/thok404/RemotePhotoSystem.git
   documentation_url: https://thok404.github.io/RemotePhotoDocs/
   project_type: VRChat World / Unity / UdonSharp package
-  current_date_recorded: 2026-06-02
+current_date_recorded: 2026-06-04
   developed_with:
     unity: 2022.3.22f1
     vrchat_sdk_worlds: 3.10.3
@@ -521,26 +521,27 @@ codex_project_backup:
     - if ReadyPool does not contain enough images for a requested group, only available slots change immediately
     - if preload release stability is poor, keep NonPreload as stable path
 
-  latest_local_work:
-    summary: Add Photo Surface aspect mode for irregular frame surfaces
-    commit:
-      message: Add Photo Surface aspect mode
-    files_changed:
-      - Scripts/Runtime/RemotePhotoTypes.cs
-      - Scripts/Runtime/RemotePhotoFrame.cs
-      - Scripts/Editor/RemotePhotoFrameEditor.cs
-      - Samples/SAMPLE_SCENE.unity
-    behavior_changes:
-      - Aspect Mode adds Photo Surface
-      - Photo Surface calculates width/height from mesh local bounds after removing the shortest thickness axis
-      - Photo Surface does not swap width and height, so values below 1 are valid
-      - Photo Surface is intended for irregular photo surfaces such as vertical hexagon, heart, star, or circular photo meshes
-      - existing Auto aspect behavior is unchanged
-      - ReferenceBox and Manual aspect behavior are unchanged
-      - Photo loading, preload, sync, Random, Sequence, Shader, and JSON behavior are unchanged
-    validation:
-      - dotnet build PhotoFrame.sln -nologo passed
-      - Unity/UdonSharp import validation still required inside Unity editor
+latest_local_work:
+  summary: Optimize Lit Texture Mix zero albedo sampling
+  commit:
+    message: Optimize Lit texture mix albedo sampling
+  files_changed:
+    - Shaders/RemotePhotoFrameDisplayLit.shader
+    - BackupReference.md
+  behavior_changes:
+    - Texture Mix equals 0 disables Lit Albedo RGB and Albedo background influence for the remote photo surface
+    - Lit Albedo sampling is skipped when Texture Mix is 0 unless Smoothness Source still needs Albedo Alpha
+    - Background Color remains active when Texture Mix is 0 even if the Lit material Albedo is non-default
+    - Texture Mix above 0 keeps the existing controllable Albedo multiply behavior
+    - no new Inspector option, shader keyword, DrawCall, URL sync, preload, Random, Sequence, or JSON behavior change
+  validation:
+    - dotnet build PhotoFrame.sln -nologo passed
+    - Unity shader import validation still required inside Unity editor
+  pending_runtime_tests:
+    - Texture Mix 0 keeps photo brightness independent from Albedo RGB
+    - Texture Mix 0 uses Background Color for Contain padding and Box side faces
+    - Smoothness Source Albedo Alpha still reads Lit Albedo alpha
+    - Texture Mix above 0 still applies Albedo multiply
     release_assets:
       local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
       local_unitypackage_size: 7481138
