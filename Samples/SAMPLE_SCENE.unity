@@ -1034,7 +1034,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1490104450}
-  inspectorLanguage: 2
+  inspectorLanguage: 0
   galleryConfigFile: {fileID: 4900000, guid: 80be607a2a754264d9c73a1d66bb4687, type: 3}
   configuredPlayMode: 0
   loadingMode: 0
