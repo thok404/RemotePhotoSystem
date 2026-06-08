@@ -14,6 +14,7 @@ namespace RemotePhotoSystem
 
         public override void Interact()
         {
+            Debug.Log("[RPS Button] Interact button=" + gameObject.name + " action=" + buttonAction + " group=" + (group == null ? "null" : group.gameObject.name));
             TriggerSelectedAction();
         }
 
@@ -24,11 +25,13 @@ namespace RemotePhotoSystem
             if (group == null)
             {
                 lastTriggerError = "Remote Photo Group is missing.";
+                Debug.Log("[RPS Button] " + lastTriggerError + " button=" + gameObject.name);
                 return;
             }
 
             if (buttonAction == RemotePhotoButtonAction.Random)
             {
+                Debug.Log("[RPS Button] TriggerSelectedAction Random button=" + gameObject.name + " group=" + group.gameObject.name);
                 group.TriggerRandom();
                 return;
             }
@@ -45,6 +48,7 @@ namespace RemotePhotoSystem
         public void TriggerRandom()
         {
             lastTriggerError = string.Empty;
+            Debug.Log("[RPS Button] TriggerRandom button=" + gameObject.name + " group=" + (group == null ? "null" : group.gameObject.name));
 
             if (group == null)
             {

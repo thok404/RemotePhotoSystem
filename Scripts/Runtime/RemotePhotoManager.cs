@@ -584,6 +584,24 @@ namespace RemotePhotoSystem
                 int cacheIndex = FindReadyCacheIndexForOrientation(frame.orientation == RemotePhotoOrientation.Landscape);
                 if (cacheIndex < 0)
                 {
+                    bool landscape = frame.orientation == RemotePhotoOrientation.Landscape;
+                    VRCUrl pendingUrl = BuildRandomReadyPoolCandidate(landscape, false);
+                    if (!RemotePhotoUrlUtility.IsValidVrcUrl(pendingUrl))
+                    {
+                        pendingUrl = BuildRandomReadyPoolCandidate(landscape, true);
+                    }
+
+                    if (!RemotePhotoUrlUtility.IsValidVrcUrl(pendingUrl))
+                    {
+                        break;
+                    }
+
+                    if (_activeRandomGroup.ApplyRandomPreloadSlotFromManager(slot, pendingUrl, _activeRandomRequestId))
+                    {
+                        _activeRandomNextSlotIndex++;
+                        continue;
+                    }
+
                     break;
                 }
 
@@ -595,10 +613,8 @@ namespace RemotePhotoSystem
                     continue;
                 }
 
-                if (_activeRandomGroup.ApplyRandomPreloadSlotFromManager(slot, url, texture, this, _activeRandomRequestId))
+                if (_activeRandomGroup.ApplyRandomPreloadSlotFromManager(slot, url, _activeRandomRequestId))
                 {
-                    MoveCachedDownloadToDisplayedFrame(frame, GetSafeUrlString(url), _cachedDownloads[cacheIndex]);
-                    ClearCachedTextureWithoutDisposingAt(cacheIndex);
                     _activeRandomNextSlotIndex++;
                     continue;
                 }
@@ -679,56 +695,6 @@ namespace RemotePhotoSystem
             }
 
             return -1;
-        }
-
-        private bool TryConsumeDownloadedTextureForActiveRandom(VRCUrl url, Texture2D texture, IVRCImageDownload download)
-        {
-            if (!_activeRandomRequestActive ||
-                _activeRandomGroup == null ||
-                _activeRandomSlots == null ||
-                !RemotePhotoUrlUtility.IsValidVrcUrl(url) ||
-                texture == null ||
-                download == null)
-            {
-                return false;
-            }
-
-            RemotePhotoFrame[] targets = _activeRandomGroup.targets;
-            while (_activeRandomNextSlotIndex < _activeRandomSlots.Length)
-            {
-                int slot = _activeRandomSlots[_activeRandomNextSlotIndex];
-                if (targets == null || slot < 0 || slot >= targets.Length)
-                {
-                    _activeRandomNextSlotIndex++;
-                    continue;
-                }
-
-                RemotePhotoFrame frame = targets[slot];
-                if (frame == null)
-                {
-                    _activeRandomNextSlotIndex++;
-                    continue;
-                }
-
-                bool targetLandscape = frame.orientation == RemotePhotoOrientation.Landscape;
-                if (!IsUrlInOrientationPool(targetLandscape, url))
-                {
-                    return false;
-                }
-
-                if (_activeRandomGroup.ApplyRandomPreloadSlotFromManager(slot, url, texture, this, _activeRandomRequestId))
-                {
-                    MoveCachedDownloadToDisplayedFrame(frame, GetSafeUrlString(url), download);
-                    _activeRandomNextSlotIndex++;
-                    TryFulfillActiveRandomRequest();
-                    return true;
-                }
-
-                return false;
-            }
-
-            CompleteActiveRandomRequest();
-            return false;
         }
 
         private int CountCurrentSyncedUrls(bool landscape)
@@ -1037,17 +1003,6 @@ namespace RemotePhotoSystem
                 return;
             }
 
-            if (configuredPlayMode == RemotePhotoPlayMode.Random &&
-                _activeRandomRequestActive &&
-                TryConsumeDownloadedTextureForActiveRandom(result.Url, result.Result, result))
-            {
-                _currentPreloadDownload = null;
-                _activePreloadRetryCount = 0;
-                AdvancePreloadCursor();
-                ScheduleNextPreloadDownload();
-                return;
-            }
-
             bool stored = StoreCachedDownload(result.Url, result.Result, result);
             LogDebug(stored ? "Preload success: " + _activePreloadUrlString : "Preload discarded: " + _activePreloadUrlString);
             if (stored)
@@ -1151,6 +1106,7 @@ namespace RemotePhotoSystem
             {
                 MarkFailedUrl(_activePreloadUrlString);
                 LogDebug("Current selection preload failed after retries; frame will finish locally: " + _activePreloadUrlString);
+                NotifyGroupsForCachedUrl(_activePreloadUrl);
                 _activePreloadRetryCount = 0;
                 AdvancePreloadCursor();
                 ScheduleNextPreloadDownload();

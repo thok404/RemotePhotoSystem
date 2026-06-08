@@ -37,15 +37,6 @@ namespace RemotePhotoSystem.Editor
             }
 
             EditorGUILayout.PropertyField(
-                serializedObject.FindProperty("triggerCooldownSeconds"),
-                G(language,
-                    "Trigger Cooldown Seconds", "トリガークールダウン秒数", "触发冷却秒数", "트리거 쿨다운 초",
-                    "Blocks repeated triggers for this many seconds.",
-                    "この秒数だけ連続トリガーを防ぎます。",
-                    "在这段秒数内阻止重复触发。",
-                    "이 초 동안 반복 트리거를 막습니다."));
-
-            EditorGUILayout.PropertyField(
                 serializedObject.FindProperty("targets"),
                 G(language,
                     "Frames", "フレーム", "相框", "프레임",
@@ -61,19 +52,6 @@ namespace RemotePhotoSystem.Editor
                     L(language, "Multi-object editing active", "複数オブジェクト編集中", "多物体编辑已启用", "다중 오브젝트 편집 활성화") +
                     " (" + targets.Length + ")",
                     EditorStyles.miniLabel);
-            }
-
-            int negativeCooldownCount = CountNegativeCooldowns();
-            if (negativeCooldownCount > 0)
-            {
-                EditorGUILayout.HelpBox(
-                    L(language,
-                        "Trigger Cooldown Seconds should be 0 or greater. Set it to 0 to disable cooldown.",
-                        "Trigger Cooldown Seconds は 0 以上にしてください。0 にするとクールダウンを無効化します。",
-                        "Trigger Cooldown Seconds 必须大于等于 0。设为 0 可禁用冷却。",
-                        "Trigger Cooldown Seconds는 0 이상이어야 합니다. 0으로 설정하면 쿨다운이 비활성화됩니다.") +
-                    CountSuffix(negativeCooldownCount),
-                    MessageType.Warning);
             }
 
             int emptyTargetListCount = CountEmptyTargetLists();
@@ -191,24 +169,6 @@ namespace RemotePhotoSystem.Editor
                 }
 
                 controllerIndex++;
-            }
-
-            return count;
-        }
-
-        private int CountNegativeCooldowns()
-        {
-            int count = 0;
-            int index = 0;
-            while (index < targets.Length)
-            {
-                RemotePhotoGroup controller = targets[index] as RemotePhotoGroup;
-                if (controller != null && controller.triggerCooldownSeconds < 0f)
-                {
-                    count++;
-                }
-
-                index++;
             }
 
             return count;

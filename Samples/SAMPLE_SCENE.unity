@@ -265,7 +265,6 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 568022273}
   manager: {fileID: 1490104451}
-  triggerCooldownSeconds: 0
   targets:
   - {fileID: 2081672846193999646}
   - {fileID: 6021888636002948595}
@@ -278,7 +277,6 @@ MonoBehaviour:
   selectionSessionId: 0
   selectionSequentialApply: 0
   loadOrderRevision: 0
-  nextAllowedTriggerServerTime: 0
   lastTriggerError: 
 --- !u!4 &568022272
 Transform:
@@ -902,7 +900,6 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1194479641}
   manager: {fileID: 1490104451}
-  triggerCooldownSeconds: 0
   targets:
   - {fileID: 8064948421120808963}
   - {fileID: 8957140278368439601}
@@ -915,7 +912,6 @@ MonoBehaviour:
   selectionSessionId: 0
   selectionSequentialApply: 0
   loadOrderRevision: 0
-  nextAllowedTriggerServerTime: 0
   lastTriggerError: 
 --- !u!4 &1194479643
 Transform:
@@ -4278,7 +4274,20 @@ MonoBehaviour:
   useAssignedLayers: 0
   DynamicPrefabs: []
   DynamicMaterials:
-  - {fileID: 2100000, guid: 2a4f3566fe39fd2489e2bc3ad18946a5, type: 2}
+  - {fileID: 2100000, guid: 45c66c3bd23e8a44baae80a5a947124c, type: 2}
+  - {fileID: 2100000, guid: 79a451f1b0728924c872cd16908b2a29, type: 2}
+  - {fileID: 2100000, guid: 1886519a91945fe498a79f65ff06431b, type: 2}
+  - {fileID: 2100000, guid: 891d5c236930d4646a71c3eb10c3d1cf, type: 2}
+  - {fileID: 2100000, guid: efe3ee19198066f4dbf45c733ade2fbf, type: 2}
+  - {fileID: 2100000, guid: 047a5a9a8e71f854190f6b3aeceb0e96, type: 2}
+  - {fileID: 2100000, guid: 2a4eb5ff11009a945a1a6346c843d172, type: 2}
+  - {fileID: 2100000, guid: faf8b2838f75dbb439a9d595fe6a79d1, type: 2}
+  - {fileID: 2100000, guid: 5893be5469edcc641a8bd963eeb3f11b, type: 2}
+  - {fileID: 2100000, guid: a40acb9ae17cf13449f5274fd51918d7, type: 2}
+  - {fileID: 2100000, guid: eeb4558e04b2ce942ba960d06d02460b, type: 2}
+  - {fileID: 2100000, guid: 6ed714f880430c64aa5cfb5f02c02cba, type: 2}
+  - {fileID: 2100000, guid: f312d67bcb8fc7d43ba15427811cb3e4, type: 2}
+  - {fileID: 2100000, guid: 8eaae6f2b6762354fb4993d876199b59, type: 2}
   LightMapsNear: []
   LightMapsFar: []
   LightMode: 0
@@ -4403,18 +4412,6 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 794833176}
     ID: 68
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 0}
-    ID: 74
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 0}
-    ID: 75
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 0}
-    ID: 76
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

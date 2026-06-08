@@ -91,7 +91,6 @@ current_date_recorded: 2026-06-04
     RemotePhotoGroup:
       responsibilities:
         - button trigger request entry
-        - network cooldown
         - target frame list
         - synced current URL payload
         - synced load slot order
@@ -107,8 +106,6 @@ current_date_recorded: 2026-06-04
         - TriggerNext()
       important_fields:
         - manager
-        - triggerCooldownSeconds
-        - nextAllowedTriggerServerTime
         - targets
         - syncedUrls
         - syncedLoadOrderSlots
@@ -128,7 +125,8 @@ current_date_recorded: 2026-06-04
       trigger_authority:
         - all players may press trigger buttons
         - non-Master clients only broadcast trigger requests
-        - current Master is the only client that checks cooldown, selects URLs, advances cursors, writes synced state, and serializes
+        - current Master is the only client that selects URLs, advances cursors, writes synced state, and serializes
+        - Group trigger cooldown was removed; current request state and Master arbitration are the remaining trigger guards
 
     RemotePhotoFrame:
       responsibilities:
@@ -346,15 +344,11 @@ current_date_recorded: 2026-06-04
       - clients apply only the latest selectionRevision for each Group
     random_trigger_sync:
       - TriggerRandom is a request entry
-      - non-Master sends _RequestTriggerRandom to all clients
+      - non-Master sends RequestTriggerRandomNetwork to all clients
       - only Networking.IsMaster executes the request
       - Master creates ActiveConsumeRequest through RemotePhotoManager.BeginRandomConsume()
       - Master writes each filled Random slot URL and syncedSlotRequestIds incrementally
       - Random slot updates may serialize per slot while the active request is being fulfilled
-    cooldown_sync:
-      field: RemotePhotoGroup.nextAllowedTriggerServerTime
-      time_source: Networking.GetServerTimeInSeconds()
-      behavior: cooldown is checked only by Master before accepting a trigger request
     sync_preference:
       - clients show fallback on download failure
       - clients must not locally choose replacement URLs
@@ -379,7 +373,6 @@ current_date_recorded: 2026-06-04
       - Groups already interacted with by users are skipped
       - Groups that already have synced URLs are skipped
       - startup selection writes syncedUrls, syncedLoadOrderSlots, syncedSlotRequestIds, selectionRevision, selectionSessionId, and loadOrderRevision
-      - startup selection does not consume Random trigger cooldown
       - Random mode builds an immediate random selection in Group.targets order
       - SequenceForward and SequenceReverse build page 0 using the current visual sort direction
       - Load Once selections set selectionSequentialApply so all clients apply them in syncedLoadOrderSlots order
@@ -496,7 +489,6 @@ current_date_recorded: 2026-06-04
     - preload world-start cache warmup
     - multiple groups under one Manager
     - mixed landscape/portrait targets
-    - trigger cooldown behavior
     - fallback behavior for bad URL, oversized image, SSL issue, denied domain
     - Random + Preload ReadyPool refill after multiple rounds
     - Random + Preload active request rejection while incomplete
@@ -522,29 +514,30 @@ current_date_recorded: 2026-06-04
     - if preload release stability is poor, keep NonPreload as stable path
 
 latest_local_work:
-  summary: Optimize Lit Texture Mix zero albedo sampling
+  summary: Remove Group trigger cooldown
   commit:
-    message: Optimize Lit texture mix albedo sampling
+    message: Remove group trigger cooldown
   files_changed:
-    - Shaders/RemotePhotoFrameDisplayLit.shader
+    - Scripts/Runtime/RemotePhotoGroup.cs
+    - Scripts/Editor/RemotePhotoGroupEditor.cs
+    - Samples/SAMPLE_SCENE.unity
     - BackupReference.md
   behavior_changes:
-    - Texture Mix equals 0 disables Lit Albedo RGB and Albedo background influence for the remote photo surface
-    - Lit Albedo sampling is skipped when Texture Mix is 0 unless Smoothness Source still needs Albedo Alpha
-    - Background Color remains active when Texture Mix is 0 even if the Lit material Albedo is non-default
-    - Texture Mix above 0 keeps the existing controllable Albedo multiply behavior
-    - no new Inspector option, shader keyword, DrawCall, URL sync, preload, Random, Sequence, or JSON behavior change
+    - RemotePhotoGroup no longer exposes or serializes trigger cooldown
+    - TriggerRandom, TriggerPrevious, and TriggerNext are no longer blocked by cooldown timing
+    - Master arbitration remains the only network writer path for trigger requests
+    - Random ActiveConsumeRequest and current loading state remain responsible for avoiding overlapping Random requests
+    - Group Inspector no longer shows Trigger Cooldown Seconds or its validation warning
   validation:
     - dotnet build PhotoFrame.sln -nologo passed
-    - Unity shader import validation still required inside Unity editor
+    - UdonSharp generated RemotePhotoGroup.asset should be refreshed by Unity/UdonSharp compile
   pending_runtime_tests:
-    - Texture Mix 0 keeps photo brightness independent from Albedo RGB
-    - Texture Mix 0 uses Background Color for Contain padding and Box side faces
-    - Smoothness Source Albedo Alpha still reads Lit Albedo alpha
-    - Texture Mix above 0 still applies Albedo multiply
+    - non-Master players can trigger Random, Previous, and Next through Master arbitration
+    - Random mode works with repeated button presses after cooldown removal
+    - Sequence Previous and Next still advance every accepted click
     release_assets:
       local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
-      local_unitypackage_size: 7481138
+      local_unitypackage_size: 7478142
       local_webtool_zip: Release/RemotePhotoSystem_WebTool_v1.00.zip
       local_webtool_zip_size: 14208
       note: Release folder is local release staging and is not tracked by git.

@@ -13,7 +13,6 @@ namespace RemotePhotoSystem
         private const int TriggerActionNext = 2;
 
         [HideInInspector] public RemotePhotoManager manager;
-        public float triggerCooldownSeconds = 2f;
         public RemotePhotoFrame[] targets = new RemotePhotoFrame[0];
 
         [UdonSynced] public VRCUrl[] syncedUrls = new VRCUrl[0];
@@ -23,7 +22,6 @@ namespace RemotePhotoSystem
         [UdonSynced] public int selectionSessionId;
         [UdonSynced] public bool selectionSequentialApply;
         [UdonSynced] public int loadOrderRevision;
-        [UdonSynced] public double nextAllowedTriggerServerTime;
 
         [HideInInspector] public string lastTriggerError = string.Empty;
 
@@ -141,11 +139,6 @@ namespace RemotePhotoSystem
             _pendingMasterTriggerAction = -1;
             _pendingMasterTriggerRetryCount = 0;
 
-            if (triggerAction == TriggerActionRandom && !CanPassTriggerCooldown())
-            {
-                return;
-            }
-
             if (!manager.ContainsManagedGroup(this))
             {
                 lastTriggerError = "This group is not managed by its Remote Photo Manager.";
@@ -185,8 +178,10 @@ namespace RemotePhotoSystem
                     return;
                 }
 
-                MarkTriggerCooldown();
+                manager.NotifySelectionStateChanged();
                 MarkGroupSyncDirty();
+                FlushGroupSerialization();
+                ApplyCurrentSelection();
                 manager.LogDebug("Group random preload request accepted: " + gameObject.name);
                 return;
             }
@@ -195,11 +190,6 @@ namespace RemotePhotoSystem
             {
                 manager.LogDebug("Group trigger blocked because the gallery does not have enough URLs for this group: " + gameObject.name);
                 return;
-            }
-
-            if (triggerAction == TriggerActionRandom)
-            {
-                MarkTriggerCooldown();
             }
 
             manager.NotifySelectionStateChanged();
@@ -381,34 +371,6 @@ namespace RemotePhotoSystem
 
             _serializationDirty = false;
             RequestSerialization();
-        }
-
-        private bool CanPassTriggerCooldown()
-        {
-            if (triggerCooldownSeconds <= 0f)
-            {
-                return true;
-            }
-
-            double now = Networking.GetServerTimeInSeconds();
-            if (now < nextAllowedTriggerServerTime)
-            {
-                lastTriggerError = "Trigger is cooling down.";
-                return false;
-            }
-
-            return true;
-        }
-
-        private void MarkTriggerCooldown()
-        {
-            if (triggerCooldownSeconds <= 0f)
-            {
-                nextAllowedTriggerServerTime = 0d;
-                return;
-            }
-
-            nextAllowedTriggerServerTime = Networking.GetServerTimeInSeconds() + triggerCooldownSeconds;
         }
 
         private bool EnsureWritableOrRetry(int triggerAction)
@@ -619,7 +581,7 @@ namespace RemotePhotoSystem
             return selectionRevision;
         }
 
-        public bool ApplyRandomPreloadSlotFromManager(int slotIndex, VRCUrl url, Texture texture, RemotePhotoManager sourceManager, int requestId)
+        public bool ApplyRandomPreloadSlotFromManager(int slotIndex, VRCUrl url, int requestId)
         {
             EnsureSyncedArrays();
             if (requestId != selectionRevision ||
@@ -630,8 +592,7 @@ namespace RemotePhotoSystem
                 slotIndex >= targets.Length ||
                 slotIndex >= syncedSlotRequestIds.Length ||
                 targets[slotIndex] == null ||
-                !RemotePhotoUrlUtility.IsValidVrcUrl(url) ||
-                texture == null)
+                !RemotePhotoUrlUtility.IsValidVrcUrl(url))
             {
                 return false;
             }
@@ -648,8 +609,8 @@ namespace RemotePhotoSystem
             }
 
             loadOrderRevision = selectionRevision;
-            targets[slotIndex].ApplyManagerTextureForSelection(texture, sourceManager, url, selectionRevision, selectionSessionId, this, slotIndex, _activeDisplaySerial);
             MarkGroupSyncDirty();
+            ApplyCurrentSelection();
             return true;
         }
 

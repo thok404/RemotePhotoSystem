@@ -203,7 +203,7 @@ namespace RemotePhotoSystem
                     _pendingGalleryCacheRevision = selectionRevision;
                     _pendingGalleryCacheSessionId = sessionId;
                     _pendingGalleryCacheSerial = requestSerial;
-                    SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+                    SendCustomEventDelayedSeconds(nameof(ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
                 }
 
                 return;
@@ -285,7 +285,7 @@ namespace RemotePhotoSystem
                 manager.WakePreloadQueue();
                 if (manager.configuredPlayMode == RemotePhotoPlayMode.Random)
                 {
-                    SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+                    SendCustomEventDelayedSeconds(nameof(ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
                 }
 
                 return;
@@ -318,7 +318,7 @@ namespace RemotePhotoSystem
             ReleaseDisplayedDirectDownloadIfFallbackApplied();
         }
 
-        public void _ApplyGalleryCacheWhenReady()
+        public void ApplyGalleryCacheWhenReady()
         {
             if (_activeManager == null ||
                 _pendingGalleryCacheUrl != _activeUrl ||
@@ -336,7 +336,7 @@ namespace RemotePhotoSystem
             }
 
             _activeManager.WakePreloadQueue();
-            SendCustomEventDelayedSeconds(nameof(_ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
+            SendCustomEventDelayedSeconds(nameof(ApplyGalleryCacheWhenReady), GalleryCachePollDelaySeconds);
         }
 
         public void NotifyManagerCacheReady(VRCUrl url)
