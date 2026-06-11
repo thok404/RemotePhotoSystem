@@ -17,6 +17,8 @@ namespace RemotePhotoSystem
         public bool useFallbackTexture = true;
         public Texture fallbackTexture;
         public RemotePhotoFitMode photoFitMode = RemotePhotoFitMode.Contain;
+        public Vector2 tileScale = Vector2.one;
+        public Vector2 tileOffset = Vector2.zero;
         public RemotePhotoProjectionMode projectionMode = RemotePhotoProjectionMode.MeshUv;
         public bool meshUvDoubleSided;
         public bool boxProjectionHorizontalFlip;
@@ -68,6 +70,7 @@ namespace RemotePhotoSystem
         private Vector3 _cachedBoundsSize = Vector3.one;
         private const int DefaultDownloadRetryAttempts = 3;
         private const int NoSelectionRevision = -1;
+        private const float MinTileScale = 0.001f;
         private const float DefaultDownloadRetryDelaySeconds = 2f;
         private const float GalleryCachePollDelaySeconds = 1f;
         private const string RemotePhotoBackgroundColorPropertyName = "_RemotePhotoBackgroundColor";
@@ -957,14 +960,9 @@ namespace RemotePhotoSystem
             }
             else if (fitMode == RemotePhotoFitModeUtility.ToInt(RemotePhotoFitMode.Tile))
             {
-                if (textureAspect > safeFrameAspect)
-                {
-                    scale.x = textureAspect / safeFrameAspect;
-                }
-                else
-                {
-                    scale.y = safeFrameAspect / textureAspect;
-                }
+                scale.x = Mathf.Max(MinTileScale, tileScale.x);
+                scale.y = Mathf.Max(MinTileScale, tileScale.y);
+                offset = tileOffset;
             }
 
             _runtimeMaterial.SetTextureScale(photoTexturePropertyName, scale);

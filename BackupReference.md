@@ -514,38 +514,39 @@ current_date_recorded: 2026-06-04
     - if preload release stability is poor, keep NonPreload as stable path
 
 latest_local_work:
-  summary: Remove Group trigger cooldown
+  summary: Add manual Tile scale and offset
   commit:
-    message: Remove group trigger cooldown
+    message: Add tile scale offset controls
   files_changed:
-    - Scripts/Runtime/RemotePhotoGroup.cs
-    - Scripts/Editor/RemotePhotoGroupEditor.cs
+    - Scripts/Runtime/RemotePhotoFrame.cs
+    - Scripts/Runtime/RemotePhotoFrame.asset
+    - Scripts/Editor/RemotePhotoFrameEditor.cs
+    - Shaders/RemotePhotoFrameDisplayLit.shader
+    - Shaders/RemotePhotoFrameDisplayUnlit.shader
     - Samples/SAMPLE_SCENE.unity
     - BackupReference.md
   behavior_changes:
-    - RemotePhotoGroup no longer exposes or serializes trigger cooldown
-    - TriggerRandom, TriggerPrevious, and TriggerNext are no longer blocked by cooldown timing
-    - Master arbitration remains the only network writer path for trigger requests
-    - Random ActiveConsumeRequest and current loading state remain responsible for avoiding overlapping Random requests
-    - Group Inspector no longer shows Trigger Cooldown Seconds or its validation warning
+    - Photo Fit Mode Tile exposes per-Frame Tile Scale and Tile Offset
+    - Tile mode no longer uses automatic aspect-based UV scaling
+    - Tile Scale uses Unity tiling semantics; larger values repeat the photo more
+    - Tile Offset shifts the tiled photo UV origin
+    - Tile Scale values at or below 0 are clamped to 0.001 at runtime and warned in Inspector
+    - Lit and Unlit shaders wrap Tile sampling with frac so the whole photo surface repeats instead of clamping edge pixels
+    - Crop, Contain, and Stretch keep their existing automatic UV behavior
   validation:
     - dotnet build PhotoFrame.sln -nologo passed
-    - UdonSharp generated RemotePhotoGroup.asset should be refreshed by Unity/UdonSharp compile
+    - Unity shader import validation still required inside Unity editor
   pending_runtime_tests:
-    - non-Master players can trigger Random, Previous, and Next through Master arbitration
-    - Random mode works with repeated button presses after cooldown removal
-    - Sequence Previous and Next still advance every accepted click
+    - Tile + Mesh UV repeats the remote photo across the full photo surface
+    - Tile + Box repeats the remote photo on the Box photo faces without changing side/background behavior
+    - Tile Scale changes repeat count and Tile Offset changes tile origin
+    - Crop, Contain, and Stretch do not regress
     release_assets:
       local_unitypackage: Release/RemotePhotoSystem_v1.00.unitypackage
-      local_unitypackage_size: 7478142
+      local_unitypackage_size: 7478827
       local_webtool_zip: Release/RemotePhotoSystem_WebTool_v1.00.zip
       local_webtool_zip_size: 14208
       note: Release folder is local release staging and is not tracked by git.
-    pending_runtime_tests:
-      - Photo Surface returns a value below 1 for a vertically oriented pointed hexagon photo mesh
-      - Photo Surface result is stable when the GameObject is rotated in the scene
-      - Photo Surface works best when the Frame object mesh bounds match the actual photo surface bounds
-      - Auto still returns the previous long-edge-oriented ratio for ordinary frame meshes
 
   external_references:
     vrchat_image_loading: https://creators.vrchat.com/worlds/udon/image-loading/

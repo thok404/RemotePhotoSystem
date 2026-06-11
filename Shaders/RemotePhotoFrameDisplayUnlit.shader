@@ -178,7 +178,8 @@ Shader "RemotePhotoSystem/Photo Frame Display Unlit"
                 }
 
                 float2 uv = RotatePhotoUv(baseUv);
-                fixed4 color = tex2D(_MainTex, uv) * _Color;
+                float2 sampleUv = _RemotePhotoFitMode > 2.5 && _RemotePhotoFitMode < 3.5 ? frac(uv) : uv;
+                fixed4 color = tex2D(_MainTex, sampleUv) * _Color;
 
                 if (_RemotePhotoFitMode > 0.5 && _RemotePhotoFitMode < 1.5)
                 {

@@ -406,6 +406,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -772,6 +774,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -1387,6 +1391,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 1
   boxProjectionHorizontalFlip: 0
@@ -2146,6 +2152,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1c458f68c6e79ec48b435153bac23035, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -3192,6 +3200,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1684eb07957282b479123a4ce927797d, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -3879,6 +3889,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 96a95505a14dbe74ea5ffa16ce5a4b0f, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -4913,7 +4925,9 @@ MonoBehaviour:
   defaultTexture: {fileID: 2800000, guid: ee8c4e5946414a2418505ced24b1292b, type: 3}
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 1c458f68c6e79ec48b435153bac23035, type: 3}
-  photoFitMode: 1
+  photoFitMode: 3
+  tileScale: {x: 5, y: 5}
+  tileOffset: {x: 0.5, y: 0.5}
   projectionMode: 0
   meshUvDoubleSided: 0
   boxProjectionHorizontalFlip: 0
@@ -5313,6 +5327,8 @@ MonoBehaviour:
   useFallbackTexture: 1
   fallbackTexture: {fileID: 2800000, guid: 96a95505a14dbe74ea5ffa16ce5a4b0f, type: 3}
   photoFitMode: 1
+  tileScale: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
   projectionMode: 0
   meshUvDoubleSided: 1
   boxProjectionHorizontalFlip: 0

@@ -196,7 +196,8 @@ Shader "RemotePhotoSystem/Photo Frame Display Lit"
 
             half needsAlbedo = textureMix > 0.001 || useAlbedoBackground > 0.5 || _SmoothnessTextureChannel > 0.5;
             fixed4 albedo = needsAlbedo ? tex2D(_MainTex, IN.surfaceUv) * _Color : fixed4(1.0, 1.0, 1.0, 1.0);
-            fixed4 photo = tex2D(_RemotePhotoImageTex, uv);
+            float2 photoUv = _RemotePhotoFitMode > 2.5 && _RemotePhotoFitMode < 3.5 ? frac(uv) : uv;
+            fixed4 photo = tex2D(_RemotePhotoImageTex, photoUv);
 
             fixed4 background = useAlbedoBackground > 0.5 ? albedo : _RemotePhotoBackgroundColor;
             fixed4 c = background;

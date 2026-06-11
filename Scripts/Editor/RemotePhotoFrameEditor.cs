@@ -113,6 +113,23 @@ namespace RemotePhotoSystem.Editor
                     "Frame 内での写真スケールを制御します。",
                     "控制图片在 Frame 内的缩放方式。",
                     "Frame 안에서 사진 스케일 방식을 제어합니다."));
+            if (photoFitMode == RemotePhotoFitMode.Tile)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("tileScale"),
+                    G(language,
+                        "Tile Scale", "タイルスケール", "Tile 缩放", "Tile 스케일",
+                        "Controls photo tiling scale in Tile mode only.",
+                        "Tile モードでのみ写真の繰り返しスケールを制御します。",
+                        "仅在 Tile 模式下控制图片重复比例。",
+                        "Tile 모드에서만 사진 반복 스케일을 제어합니다."));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("tileOffset"),
+                    G(language,
+                        "Tile Offset", "タイルオフセット", "Tile 偏移", "Tile 오프셋",
+                        "Controls photo UV offset in Tile mode only.",
+                        "Tile モードでのみ写真 UV の開始位置をずらします。",
+                        "仅在 Tile 模式下控制图片 UV 起始偏移。",
+                        "Tile 모드에서만 사진 UV 시작 오프셋을 제어합니다."));
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("projectionMode"),
                 G(language,
                     "Projection Mode", "投影モード", "投射模式", "투영 모드",
@@ -233,6 +250,17 @@ namespace RemotePhotoSystem.Editor
                         "Manual Aspect Ratio は 0 より大きい値にしてください。",
                         "Manual Aspect Ratio 必须大于 0。",
                         "Manual Aspect Ratio는 0보다 커야 합니다."),
+                    MessageType.Warning);
+            }
+
+            if (CountInvalidTileScales() > 0)
+            {
+                EditorGUILayout.HelpBox(
+                    L(language,
+                        "Tile Scale should be greater than 0 on both axes.",
+                        "Tile Scale は両方の軸で 0 より大きい値にしてください。",
+                        "Tile Scale 两个轴向都必须大于 0。",
+                        "Tile Scale은 두 축 모두에서 0보다 커야 합니다."),
                     MessageType.Warning);
             }
 
@@ -379,6 +407,26 @@ namespace RemotePhotoSystem.Editor
             {
                 RemotePhotoFrame display = targets[index] as RemotePhotoFrame;
                 if (display == null || display.GetComponent<MeshRenderer>() == null)
+                {
+                    count++;
+                }
+
+                index++;
+            }
+
+            return count;
+        }
+
+        private int CountInvalidTileScales()
+        {
+            int count = 0;
+            int index = 0;
+            while (index < targets.Length)
+            {
+                RemotePhotoFrame display = targets[index] as RemotePhotoFrame;
+                if (display != null &&
+                    display.photoFitMode == RemotePhotoFitMode.Tile &&
+                    (display.tileScale.x <= 0f || display.tileScale.y <= 0f))
                 {
                     count++;
                 }
